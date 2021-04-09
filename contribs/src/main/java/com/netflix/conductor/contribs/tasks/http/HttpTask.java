@@ -74,7 +74,7 @@ public class HttpTask extends WorkflowSystemTask {
         this.restTemplateProvider = restTemplateProvider;
         this.objectMapper = objectMapper;
         this.requestParameter = REQUEST_PARAMETER_NAME;
-        LOGGER.info("{} initialized...", getName());
+        LOGGER.info("{} initialized...", getTaskType());
     }
 
     @Override
@@ -125,10 +125,10 @@ public class HttpTask extends WorkflowSystemTask {
             }
 
         } catch (Exception e) {
-            LOGGER.error("Failed to invoke {} task: {} - uri: {}, vipAddress: {} in workflow: {}", getName(), task.getTaskId(),
+            LOGGER.error("Failed to invoke {} task: {} - uri: {}, vipAddress: {} in workflow: {}", getTaskType(), task.getTaskId(),
                 input.getUri(), input.getVipAddress(), task.getWorkflowInstanceId(), e);
             task.setStatus(Status.FAILED);
-            task.setReasonForIncompletion("Failed to invoke " + getName() + " task due to: " + e.toString());
+            task.setReasonForIncompletion("Failed to invoke " + getTaskType() + " task due to: " + e);
             task.getOutputData().put("response", e.toString());
         }
     }

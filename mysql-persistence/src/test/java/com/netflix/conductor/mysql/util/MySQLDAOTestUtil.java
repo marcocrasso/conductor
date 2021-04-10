@@ -44,6 +44,10 @@ public class MySQLDAOTestUtil {
         when(properties.getJdbcUsername()).thenReturn(mySQLContainer.getUsername());
         when(properties.getJdbcPassword()).thenReturn(mySQLContainer.getPassword());
         when(properties.getTaskDefCacheRefreshInterval()).thenReturn(Duration.ofSeconds(60));
+        when(properties.getConnectionPoolMaxSize()).thenReturn(8);
+        when(properties.getConnectionPoolMinIdle()).thenReturn(1);
+        when(properties.getConnectionMaxLifetime()).thenReturn(Duration.ofSeconds(3000));
+
         //createDatabase(mySQLContainer, dbName);
         this.objectMapper = objectMapper;
         this.dataSource = getDataSource(properties);
@@ -57,7 +61,8 @@ public class MySQLDAOTestUtil {
         dataSource.setAutoCommit(false);
 
         // Prevent DB from getting exhausted during rapid testing
-        dataSource.setMaximumPoolSize(8);
+        dataSource.setMaximumPoolSize(properties.getConnectionPoolMaxSize());
+        dataSource.setMinimumIdle(properties.getConnectionPoolMinIdle());
 
         flywayMigrate(dataSource);
 

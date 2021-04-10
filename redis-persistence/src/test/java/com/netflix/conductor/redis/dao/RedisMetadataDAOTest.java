@@ -24,6 +24,8 @@ import com.netflix.conductor.redis.jedis.JedisProxy;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import java.time.Duration;
+
+import com.netflix.conductor.redis.memory.RedisMemoryMetadataDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +64,7 @@ public class RedisMetadataDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisMetadataDAO = new RedisMetadataDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisMetadataDAO = new RedisMemoryMetadataDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test(expected = ApplicationException.class)

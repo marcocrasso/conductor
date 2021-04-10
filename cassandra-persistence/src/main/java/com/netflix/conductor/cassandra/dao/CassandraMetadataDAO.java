@@ -30,23 +30,13 @@ import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import javax.annotation.PostConstruct;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.netflix.conductor.cassandra.util.Constants.TASK_DEFINITION_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_DEFS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEFINITION_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_INDEX_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_NAME_VERSION_KEY;
+import static com.netflix.conductor.cassandra.util.Constants.*;
 
 @Trace
 public class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDAO {
@@ -57,59 +47,67 @@ public class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
 
     private Map<String, TaskDef> taskDefCache = new HashMap<>();
 
-    private final PreparedStatement insertWorkflowDefStatement;
-    private final PreparedStatement insertWorkflowDefVersionIndexStatement;
-    private final PreparedStatement insertTaskDefStatement;
+    private PreparedStatement insertWorkflowDefStatement;
+    private PreparedStatement insertWorkflowDefVersionIndexStatement;
+    private PreparedStatement insertTaskDefStatement;
 
-    private final PreparedStatement selectWorkflowDefStatement;
-    private final PreparedStatement selectAllWorkflowDefVersionsByNameStatement;
-    private final PreparedStatement selectAllWorkflowDefsStatement;
-    private final PreparedStatement selectTaskDefStatement;
-    private final PreparedStatement selectAllTaskDefsStatement;
+    private PreparedStatement selectWorkflowDefStatement;
+    private PreparedStatement selectAllWorkflowDefVersionsByNameStatement;
+    private PreparedStatement selectAllWorkflowDefsStatement;
+    private PreparedStatement selectTaskDefStatement;
+    private PreparedStatement selectAllTaskDefsStatement;
 
-    private final PreparedStatement updateWorkflowDefStatement;
+    private PreparedStatement updateWorkflowDefStatement;
 
-    private final PreparedStatement deleteWorkflowDefStatement;
-    private final PreparedStatement deleteWorkflowDefIndexStatement;
-    private final PreparedStatement deleteTaskDefStatement;
+    private PreparedStatement deleteWorkflowDefStatement;
+    private PreparedStatement deleteWorkflowDefIndexStatement;
+    private PreparedStatement deleteTaskDefStatement;
 
-    public CassandraMetadataDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties,
-        Statements statements) {
-        super(session, objectMapper, properties);
+    public CassandraMetadataDAO() {
+        super();
+    }
 
+    public CassandraMetadataDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties, Statements statements) {
+        super(session, objectMapper, properties, statements);
+    }
+
+    @PostConstruct
+    @Override
+    protected void init() {
+        super.init();
         this.insertWorkflowDefStatement = session.prepare(statements.getInsertWorkflowDefStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.insertWorkflowDefVersionIndexStatement = session
-            .prepare(statements.getInsertWorkflowDefVersionIndexStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .prepare(statements.getInsertWorkflowDefVersionIndexStatement())
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.insertTaskDefStatement = session.prepare(statements.getInsertTaskDefStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         this.selectWorkflowDefStatement = session.prepare(statements.getSelectWorkflowDefStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectAllWorkflowDefVersionsByNameStatement = session
-            .prepare(statements.getSelectAllWorkflowDefVersionsByNameStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .prepare(statements.getSelectAllWorkflowDefVersionsByNameStatement())
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectAllWorkflowDefsStatement = session.prepare(statements.getSelectAllWorkflowDefsStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectTaskDefStatement = session.prepare(statements.getSelectTaskDefStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectAllTaskDefsStatement = session.prepare(statements.getSelectAllTaskDefsStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
 
         this.updateWorkflowDefStatement = session.prepare(statements.getUpdateWorkflowDefStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         this.deleteWorkflowDefStatement = session.prepare(statements.getDeleteWorkflowDefStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteWorkflowDefIndexStatement = session.prepare(statements.getDeleteWorkflowDefIndexStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteTaskDefStatement = session.prepare(statements.getDeleteTaskDefStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         long cacheRefreshTime = properties.getTaskDefCacheRefreshInterval().getSeconds();
         Executors.newSingleThreadScheduledExecutor()
-            .scheduleWithFixedDelay(this::refreshTaskDefsCache, 0, cacheRefreshTime, TimeUnit.SECONDS);
+                .scheduleWithFixedDelay(this::refreshTaskDefsCache, 0, cacheRefreshTime, TimeUnit.SECONDS);
     }
 
     @Override
@@ -171,7 +169,7 @@ public class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
             String errorMsg = String.format("Error creating workflow definition: %s/%d", workflowDef.getName(),
                 workflowDef.getVersion());
             LOGGER.error(errorMsg, e);
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, errorMsg, e);
+            throw new ApplicationException(Code.BACKEND_ERROR, errorMsg, e);
         }
     }
 
@@ -191,7 +189,7 @@ public class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
             String errorMsg = String.format("Error updating workflow definition: %s/%d", workflowDef.getName(),
                 workflowDef.getVersion());
             LOGGER.error(errorMsg, e);
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, errorMsg, e);
+            throw new ApplicationException(Code.BACKEND_ERROR, errorMsg, e);
         }
     }
 

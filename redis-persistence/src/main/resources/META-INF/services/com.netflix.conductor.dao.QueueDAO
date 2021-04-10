@@ -1,0 +1,5 @@
+com.netflix.conductor.redis.dynomite.RedisDynomiteQueueDAO
+com.netflix.conductor.redis.cluster.RedisClusterQueueDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelQueueDAO
+com.netflix.conductor.redis.standalone.RedisStandaloneQueueDAO
+com.netflix.conductor.redis.memory.RedisMemoryQueueDAO

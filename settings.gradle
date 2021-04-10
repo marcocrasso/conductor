@@ -26,4 +26,5 @@ include 'grpc-client'
 
 include 'test-harness'
 
+include 'service-loader'
 rootProject.children.each {it.name="conductor-${it.name}"}

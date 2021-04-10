@@ -40,6 +40,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -47,11 +48,13 @@ import org.testcontainers.utility.DockerImageName;
 
 @ContextConfiguration(classes = {ObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class PostgresQueueDAOTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQueueDAOTest.class);
 
     private PostgresDAOTestUtil testUtil;
+
     private PostgresQueueDAO queueDAO;
 
     @Autowired
@@ -71,7 +74,7 @@ public class PostgresQueueDAOTest {
             new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
         testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
-        queueDAO = new PostgresQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
+        queueDAO = new PostgresQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
     }
 
     @After

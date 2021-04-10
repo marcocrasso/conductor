@@ -12,12 +12,13 @@
  */
 package com.netflix.conductor.mysql.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
+
 import java.sql.Connection;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationUnit;
 
 @ConfigurationProperties("conductor.mysql")
 public class MySQLProperties {

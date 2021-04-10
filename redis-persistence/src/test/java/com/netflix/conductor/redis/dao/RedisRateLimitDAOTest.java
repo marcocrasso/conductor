@@ -20,6 +20,7 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
+import com.netflix.conductor.redis.memory.RedisMemoryRateLimitingDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +51,7 @@ public class RedisRateLimitDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        rateLimitingDao = new RedisRateLimitingDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        rateLimitingDao = new RedisMemoryRateLimitingDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test

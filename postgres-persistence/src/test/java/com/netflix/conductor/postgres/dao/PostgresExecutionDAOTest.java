@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -39,7 +40,8 @@ import org.testcontainers.utility.DockerImageName;
 @RunWith(SpringRunner.class)
 public class PostgresExecutionDAOTest extends ExecutionDAOTest {
 
-    private PostgresDAOTestUtil testPostgres;
+    private PostgresDAOTestUtil testUtil;
+
     private PostgresExecutionDAO executionDAO;
 
     @Autowired
@@ -55,18 +57,15 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         postgreSQLContainer =
             new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
-        testPostgres = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
-        executionDAO = new PostgresExecutionDAO(
-            testPostgres.getObjectMapper(),
-            testPostgres.getDataSource()
-        );
-        testPostgres.resetAllData();
+        testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
+        testUtil.resetAllData();
+        executionDAO = new PostgresExecutionDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
     }
 
     @After
     public void teardown() {
-        testPostgres.resetAllData();
-        testPostgres.getDataSource().close();
+        testUtil.resetAllData();
+        testUtil.getDataSource().close();
     }
 
     @Test

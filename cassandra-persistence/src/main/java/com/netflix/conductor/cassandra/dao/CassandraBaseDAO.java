@@ -12,50 +12,27 @@
  */
 package com.netflix.conductor.cassandra.dao;
 
+import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.netflix.conductor.cassandra.config.CassandraConfiguration;
 import com.netflix.conductor.cassandra.config.CassandraProperties;
+import com.netflix.conductor.cassandra.util.Statements;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
-import static com.netflix.conductor.cassandra.util.Constants.DAO_NAME;
-import static com.netflix.conductor.cassandra.util.Constants.ENTITY_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.EVENT_EXECUTION_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.EVENT_HANDLER_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.EVENT_HANDLER_NAME_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.HANDLERS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.MESSAGE_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.PAYLOAD_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.SHARD_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_EVENT_EXECUTIONS;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_EVENT_HANDLERS;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_TASK_DEFS;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_TASK_DEF_LIMIT;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_TASK_LOOKUP;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_WORKFLOWS;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_WORKFLOW_DEFS;
-import static com.netflix.conductor.cassandra.util.Constants.TABLE_WORKFLOW_DEFS_INDEX;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_DEFINITION_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_DEFS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_DEF_NAME_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TOTAL_PARTITIONS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TOTAL_TASKS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEFINITION_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_INDEX_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_INDEX_VALUE;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_NAME_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_DEF_NAME_VERSION_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_VERSION_KEY;
+import static com.netflix.conductor.cassandra.util.Constants.*;
 
 /**
  * Creates the keyspace and tables.
@@ -89,35 +66,46 @@ public abstract class CassandraBaseDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBaseDAO.class);
 
-    private final ObjectMapper objectMapper;
-    protected final Session session;
-    protected final CassandraProperties properties;
+    @Autowired
+    protected ObjectMapper objectMapper;
 
-    private boolean initialized = false;
+    @Autowired
+    protected CassandraProperties properties;
 
-    public CassandraBaseDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties) {
-        this.session = session;
+    protected Session session;
+
+    Statements statements;
+
+    public CassandraBaseDAO(){
+
+    }
+
+    public CassandraBaseDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties, Statements statements) {
         this.objectMapper = objectMapper;
+        this.session = session;
         this.properties = properties;
-
+        this.statements = statements;
         init();
     }
 
-    private void init() {
+    @PostConstruct
+    protected void init() {
+        Cluster cluster = CassandraConfiguration.cluster(properties);
+        if (session==null)
+            session = CassandraConfiguration.session(cluster);
+        if (statements==null)
+            statements = CassandraConfiguration.statements(properties);
         try {
-            if (!initialized) {
-                session.execute(getCreateKeyspaceStatement());
-                session.execute(getCreateWorkflowsTableStatement());
-                session.execute(getCreateTaskLookupTableStatement());
-                session.execute(getCreateTaskDefLimitTableStatement());
-                session.execute(getCreateWorkflowDefsTableStatement());
-                session.execute(getCreateWorkflowDefsIndexTableStatement());
-                session.execute(getCreateTaskDefsTableStatement());
-                session.execute(getCreateEventHandlersTableStatement());
-                session.execute(getCreateEventExecutionsTableStatement());
-                LOGGER.info("{} initialization complete! Tables created!",  getClass().getSimpleName());
-                initialized = true;
-            }
+            session.execute(getCreateKeyspaceStatement());
+            session.execute(getCreateWorkflowsTableStatement());
+            session.execute(getCreateTaskLookupTableStatement());
+            session.execute(getCreateTaskDefLimitTableStatement());
+            session.execute(getCreateWorkflowDefsTableStatement());
+            session.execute(getCreateWorkflowDefsIndexTableStatement());
+            session.execute(getCreateTaskDefsTableStatement());
+            session.execute(getCreateEventHandlersTableStatement());
+            session.execute(getCreateEventExecutionsTableStatement());
+            LOGGER.info("{} initialization complete! Tables created!",  getClass().getSimpleName());
         } catch (Exception e) {
             LOGGER.error("Error initializing and setting up keyspace and table in cassandra", e);
             throw e;

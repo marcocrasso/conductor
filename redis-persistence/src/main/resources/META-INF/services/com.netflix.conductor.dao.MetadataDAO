@@ -1,0 +1,5 @@
+com.netflix.conductor.redis.cluster.RedisClusterMetadataDAO
+com.netflix.conductor.redis.dynomite.RedisDynomiteMetadataDAO
+com.netflix.conductor.redis.memory.RedisMemoryMetadataDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelMetadataDAO
+com.netflix.conductor.redis.standalone.RedisStandaloneMetadataDAO

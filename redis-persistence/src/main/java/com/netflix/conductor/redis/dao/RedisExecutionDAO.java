@@ -25,7 +25,6 @@ import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import java.text.SimpleDateFormat;
@@ -42,11 +41,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
-@Component
-@Conditional(AnyRedisCondition.class)
+import javax.annotation.PostConstruct;
+
 public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(RedisExecutionDAO.class);
@@ -63,12 +61,13 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
     private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
     private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
     private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
-    private final int ttlEventExecutionSeconds;
 
-    public RedisExecutionDAO(JedisProxy jedisProxy, ObjectMapper objectMapper, ConductorProperties conductorProperties,
-        RedisProperties properties) {
-        super(jedisProxy, objectMapper, conductorProperties, properties);
+    private int ttlEventExecutionSeconds;
 
+    @PostConstruct
+    @Override
+    protected void init() {
+        super.init();
         ttlEventExecutionSeconds = (int) properties.getEventExecutionPersistenceTTL().getSeconds();
     }
 

@@ -12,11 +12,7 @@
  */
 package com.netflix.conductor.cassandra.dao;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -35,24 +31,11 @@ import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import javax.annotation.PostConstruct;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.netflix.conductor.cassandra.util.Constants.DEFAULT_SHARD_ID;
-import static com.netflix.conductor.cassandra.util.Constants.DEFAULT_TOTAL_PARTITIONS;
-import static com.netflix.conductor.cassandra.util.Constants.ENTITY_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.ENTITY_TYPE_TASK;
-import static com.netflix.conductor.cassandra.util.Constants.ENTITY_TYPE_WORKFLOW;
-import static com.netflix.conductor.cassandra.util.Constants.PAYLOAD_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TASK_ID_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TOTAL_PARTITIONS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.TOTAL_TASKS_KEY;
-import static com.netflix.conductor.cassandra.util.Constants.WORKFLOW_ID_KEY;
+import static com.netflix.conductor.cassandra.util.Constants.*;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
 
 @Trace
@@ -61,86 +44,94 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutionDAO.class);
     private static final String CLASS_NAME = CassandraExecutionDAO.class.getSimpleName();
 
-    private final PreparedStatement insertWorkflowStatement;
-    private final PreparedStatement insertTaskStatement;
-    private final PreparedStatement insertEventExecutionStatement;
+    private PreparedStatement insertWorkflowStatement;
+    private PreparedStatement insertTaskStatement;
+    private PreparedStatement insertEventExecutionStatement;
 
-    private final PreparedStatement selectTotalStatement;
-    private final PreparedStatement selectTaskStatement;
-    private final PreparedStatement selectWorkflowStatement;
-    private final PreparedStatement selectWorkflowWithTasksStatement;
-    private final PreparedStatement selectTaskLookupStatement;
-    private final PreparedStatement selectTasksFromTaskDefLimitStatement;
-    private final PreparedStatement selectEventExecutionsStatement;
+    private PreparedStatement selectTotalStatement;
+    private PreparedStatement selectTaskStatement;
+    private PreparedStatement selectWorkflowStatement;
+    private PreparedStatement selectWorkflowWithTasksStatement;
+    private PreparedStatement selectTaskLookupStatement;
+    private PreparedStatement selectTasksFromTaskDefLimitStatement;
+    private PreparedStatement selectEventExecutionsStatement;
 
-    private final PreparedStatement updateWorkflowStatement;
-    private final PreparedStatement updateTotalTasksStatement;
-    private final PreparedStatement updateTotalPartitionsStatement;
-    private final PreparedStatement updateTaskLookupStatement;
-    private final PreparedStatement updateTaskDefLimitStatement;
-    private final PreparedStatement updateEventExecutionStatement;
+    private PreparedStatement updateWorkflowStatement;
+    private PreparedStatement updateTotalTasksStatement;
+    private PreparedStatement updateTotalPartitionsStatement;
+    private PreparedStatement updateTaskLookupStatement;
+    private PreparedStatement updateTaskDefLimitStatement;
+    private PreparedStatement updateEventExecutionStatement;
 
-    private final PreparedStatement deleteWorkflowStatement;
-    private final PreparedStatement deleteTaskStatement;
-    private final PreparedStatement deleteTaskLookupStatement;
-    private final PreparedStatement deleteTaskDefLimitStatement;
-    private final PreparedStatement deleteEventExecutionStatement;
+    private PreparedStatement deleteWorkflowStatement;
+    private PreparedStatement deleteTaskStatement;
+    private PreparedStatement deleteTaskLookupStatement;
+    private PreparedStatement deleteTaskDefLimitStatement;
+    private PreparedStatement deleteEventExecutionStatement;
 
-    private final int eventExecutionsTTL;
+    private int eventExecutionsTTL;
 
-    public CassandraExecutionDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties,
-        Statements statements) {
-        super(session, objectMapper, properties);
+    public CassandraExecutionDAO() {
+        super();
+    }
 
+    public CassandraExecutionDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties, Statements statements) {
+        super(session, objectMapper, properties, statements);
+    }
+
+    @PostConstruct
+    @Override
+    protected void init() {
+        super.init();
         eventExecutionsTTL = (int) properties.getEventExecutionPersistenceTtl().getSeconds();
 
         this.insertWorkflowStatement = session.prepare(statements.getInsertWorkflowStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.insertTaskStatement = session.prepare(statements.getInsertTaskStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.insertEventExecutionStatement = session.prepare(statements.getInsertEventExecutionStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         this.selectTotalStatement = session.prepare(statements.getSelectTotalStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectTaskStatement = session.prepare(statements.getSelectTaskStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectWorkflowStatement = session.prepare(statements.getSelectWorkflowStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectWorkflowWithTasksStatement = session.prepare(statements.getSelectWorkflowWithTasksStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectTaskLookupStatement = session.prepare(statements.getSelectTaskFromLookupTableStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectTasksFromTaskDefLimitStatement = session
-            .prepare(statements.getSelectTasksFromTaskDefLimitStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .prepare(statements.getSelectTasksFromTaskDefLimitStatement())
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         this.selectEventExecutionsStatement = session
-            .prepare(statements.getSelectAllEventExecutionsForMessageFromEventExecutionsStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .prepare(statements.getSelectAllEventExecutionsForMessageFromEventExecutionsStatement())
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
 
         this.updateWorkflowStatement = session.prepare(statements.getUpdateWorkflowStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.updateTotalTasksStatement = session.prepare(statements.getUpdateTotalTasksStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.updateTotalPartitionsStatement = session.prepare(statements.getUpdateTotalPartitionsStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.updateTaskLookupStatement = session.prepare(statements.getUpdateTaskLookupStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.updateTaskDefLimitStatement = session.prepare(statements.getUpdateTaskDefLimitStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.updateEventExecutionStatement = session.prepare(statements.getUpdateEventExecutionStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         this.deleteWorkflowStatement = session.prepare(statements.getDeleteWorkflowStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteTaskStatement = session.prepare(statements.getDeleteTaskStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteTaskLookupStatement = session.prepare(statements.getDeleteTaskLookupStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteTaskDefLimitStatement = session.prepare(statements.getDeleteTaskDefLimitStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         this.deleteEventExecutionStatement = session.prepare(statements.getDeleteEventExecutionsStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
     }
 
     @Override
@@ -241,6 +232,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
      */
     @Override
     public boolean exceedsInProgressLimit(Task task) {
+
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
         if (!taskDefinition.isPresent()) {
             return false;
@@ -450,7 +442,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
                         Task task = readValue(row.getString(PAYLOAD_KEY), Task.class);
                         tasks.add(task);
                     } else {
-                        throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, String
+                        throw new ApplicationException(Code.INTERNAL_ERROR, String
                             .format("Invalid row with entityKey: %s found in datastore for workflow: %s", entityKey,
                                 workflowId));
                     }

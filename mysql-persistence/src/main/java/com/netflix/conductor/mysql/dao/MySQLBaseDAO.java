@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.mysql.config.MySQLDataSourceProvider;
+import com.netflix.conductor.mysql.config.MySQLProperties;
 import com.netflix.conductor.mysql.util.ExecuteFunction;
 import com.netflix.conductor.mysql.util.LazyToString;
 import com.netflix.conductor.mysql.util.Query;
@@ -25,7 +27,10 @@ import com.netflix.conductor.mysql.util.QueryFunction;
 import com.netflix.conductor.mysql.util.TransactionalFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
@@ -54,12 +59,30 @@ public abstract class MySQLBaseDAO {
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final ObjectMapper objectMapper;
-    protected final DataSource dataSource;
 
-    protected MySQLBaseDAO(ObjectMapper om, DataSource dataSource) {
+    @Autowired
+    MySQLProperties properties;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    protected DataSource dataSource;
+
+    public MySQLBaseDAO() {
+
+    }
+
+    protected MySQLBaseDAO(ObjectMapper om, DataSource dataSource, MySQLProperties properties) {
         this.objectMapper = om;
         this.dataSource = dataSource;
+        this.properties = properties;
+        init();
+    }
+
+    @PostConstruct
+    protected void init() {
+        if (dataSource==null)
+            dataSource = new MySQLDataSourceProvider(properties).getDataSource();
     }
 
     protected final LazyToString getCallingMethod() {

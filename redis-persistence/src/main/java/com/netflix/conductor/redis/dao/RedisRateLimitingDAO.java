@@ -20,27 +20,19 @@ import com.netflix.conductor.dao.RateLimitingDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import com.netflix.conductor.redis.config.RedisProperties;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Optional;
 
-@Component
-@Conditional(AnyRedisCondition.class)
 public class RedisRateLimitingDAO extends BaseDynoDAO implements RateLimitingDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisRateLimitingDAO.class);
 
     private static final String TASK_RATE_LIMIT_BUCKET = "TASK_RATE_LIMIT_BUCKET";
-
-    public RedisRateLimitingDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
-        super(jedisProxy, objectMapper, conductorProperties, properties);
-    }
 
     /**
      * This method evaluates if the {@link TaskDef} is rate limited or not based on {@link

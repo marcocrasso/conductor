@@ -22,6 +22,7 @@ import com.netflix.conductor.dao.PollDataDAOTest;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
+import com.netflix.conductor.redis.memory.RedisMemoryPollDataDAO;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ public class RedisPollDataDAOTest extends PollDataDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisPollDataDAO = new RedisPollDataDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisPollDataDAO = new RedisMemoryPollDataDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Override

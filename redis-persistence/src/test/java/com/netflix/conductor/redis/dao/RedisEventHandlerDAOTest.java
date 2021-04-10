@@ -28,6 +28,8 @@ import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import java.util.List;
 import java.util.UUID;
+
+import com.netflix.conductor.redis.memory.RedisMemoryEventHandlerDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +54,7 @@ public class RedisEventHandlerDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisEventHandlerDAO = new RedisEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisEventHandlerDAO = new RedisMemoryEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test

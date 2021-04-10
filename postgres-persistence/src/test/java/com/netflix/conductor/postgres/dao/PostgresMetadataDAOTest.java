@@ -43,6 +43,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -53,7 +54,10 @@ import org.testcontainers.utility.DockerImageName;
 public class PostgresMetadataDAOTest {
 
     private PostgresDAOTestUtil testUtil;
+
     private PostgresMetadataDAO metadataDAO;
+
+    private PostgresEventHandlerDAO eventHandlerDAO;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -72,8 +76,8 @@ public class PostgresMetadataDAOTest {
             new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
         testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
-        metadataDAO = new PostgresMetadataDAO(testUtil.getObjectMapper(), testUtil.getDataSource(),
-            testUtil.getTestProperties());
+        metadataDAO = new PostgresMetadataDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
+        eventHandlerDAO = new PostgresEventHandlerDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
     }
 
     @After
@@ -267,30 +271,30 @@ public class PostgresMetadataDAOTest {
         eventHandler.getActions().add(action);
         eventHandler.setEvent(event1);
 
-        metadataDAO.addEventHandler(eventHandler);
-        List<EventHandler> all = metadataDAO.getAllEventHandlers();
+        eventHandlerDAO.addEventHandler(eventHandler);
+        List<EventHandler> all = eventHandlerDAO.getAllEventHandlers();
         assertNotNull(all);
         assertEquals(1, all.size());
         assertEquals(eventHandler.getName(), all.get(0).getName());
         assertEquals(eventHandler.getEvent(), all.get(0).getEvent());
 
-        List<EventHandler> byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
+        List<EventHandler> byEvents = eventHandlerDAO.getEventHandlersForEvent(event1, true);
         assertNotNull(byEvents);
         assertEquals(0, byEvents.size());        //event is marked as in-active
 
         eventHandler.setActive(true);
         eventHandler.setEvent(event2);
-        metadataDAO.updateEventHandler(eventHandler);
+        eventHandlerDAO.updateEventHandler(eventHandler);
 
-        all = metadataDAO.getAllEventHandlers();
+        all = eventHandlerDAO.getAllEventHandlers();
         assertNotNull(all);
         assertEquals(1, all.size());
 
-        byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
+        byEvents = eventHandlerDAO.getEventHandlersForEvent(event1, true);
         assertNotNull(byEvents);
         assertEquals(0, byEvents.size());
 
-        byEvents = metadataDAO.getEventHandlersForEvent(event2, true);
+        byEvents = eventHandlerDAO.getEventHandlersForEvent(event2, true);
         assertNotNull(byEvents);
         assertEquals(1, byEvents.size());
     }

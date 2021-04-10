@@ -1,0 +1,98 @@
+/**
+ * Copyright 2021 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package com.netflix.conductor.mysql.dao;
+
+import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.tasks.PollData;
+import com.netflix.conductor.core.exception.ApplicationException;
+
+import com.netflix.conductor.dao.PollDataDAO;
+
+import javax.annotation.PostConstruct;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
+
+public class MySQLPollDataDAO extends MySQLBaseDAO implements PollDataDAO {
+
+    @Override
+    public void updateLastPollData(String taskDefName, String domain, String workerId) {
+        Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
+        PollData pollData = new PollData(taskDefName, domain, workerId, System.currentTimeMillis());
+        String effectiveDomain = (domain == null) ? "DEFAULT" : domain;
+        withTransaction(tx -> insertOrUpdatePollData(tx, pollData, effectiveDomain));
+    }
+
+    @Override
+    public PollData getPollData(String taskDefName, String domain) {
+        Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
+        String effectiveDomain = (domain == null) ? "DEFAULT" : domain;
+        return getWithRetriedTransactions(tx -> readPollData(tx, taskDefName, effectiveDomain));
+    }
+
+    @Override
+    public List<PollData> getPollData(String taskDefName) {
+        Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
+        return readAllPollData(taskDefName);
+    }
+
+    @Override
+    public List<PollData> getAllPollData() {
+        try (Connection tx = dataSource.getConnection()) {
+            boolean previousAutoCommitMode = tx.getAutoCommit();
+            tx.setAutoCommit(true);
+            try {
+                String GET_ALL_POLL_DATA = "SELECT json_data FROM poll_data ORDER BY queue_name";
+                return query(tx, GET_ALL_POLL_DATA, q -> q.executeAndFetch(PollData.class));
+            } catch (Throwable th) {
+                throw new ApplicationException(BACKEND_ERROR, th.getMessage(), th);
+            } finally {
+                tx.setAutoCommit(previousAutoCommitMode);
+            }
+        } catch (SQLException ex) {
+            throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
+        }
+    }
+
+    void insertOrUpdatePollData(Connection connection, PollData pollData, String domain) {
+
+        /*
+         * Most times the row will be updated so let's try the update first. This used to be an 'INSERT/ON DUPLICATE KEY update' sql statement. The problem with that
+         * is that if we try the INSERT first, the sequence will be increased even if the ON DUPLICATE KEY happens. Since polling happens *a lot*, the sequence can increase
+         * dramatically even though it won't be used.
+         */
+        String UPDATE_POLL_DATA = "UPDATE poll_data SET json_data=?, modified_on=CURRENT_TIMESTAMP WHERE queue_name=? AND domain=?";
+        int rowsUpdated = query(connection, UPDATE_POLL_DATA,
+                q -> q.addJsonParameter(pollData).addParameter(pollData.getQueueName()).addParameter(domain)
+                        .executeUpdate());
+
+        if (rowsUpdated == 0) {
+            String INSERT_POLL_DATA = "INSERT INTO poll_data (queue_name, domain, json_data, modified_on) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE json_data=VALUES(json_data), modified_on=VALUES(modified_on)";
+            execute(connection, INSERT_POLL_DATA, q -> q.addParameter(pollData.getQueueName()).addParameter(domain)
+                    .addJsonParameter(pollData).executeUpdate());
+        }
+    }
+
+    PollData readPollData(Connection connection, String queueName, String domain) {
+        String GET_POLL_DATA = "SELECT json_data FROM poll_data WHERE queue_name = ? AND domain = ?";
+        return query(connection, GET_POLL_DATA,
+                q -> q.addParameter(queueName).addParameter(domain).executeAndFetchFirst(PollData.class));
+    }
+
+    protected List<PollData> readAllPollData(String queueName) {
+        String GET_ALL_POLL_DATA = "SELECT json_data FROM poll_data WHERE queue_name = ?";
+        return queryWithTransaction(GET_ALL_POLL_DATA, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
+    }
+}

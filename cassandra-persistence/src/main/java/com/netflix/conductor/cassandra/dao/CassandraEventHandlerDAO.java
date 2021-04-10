@@ -28,11 +28,8 @@ import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.PostConstruct;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,24 +45,31 @@ public class CassandraEventHandlerDAO extends CassandraBaseDAO implements EventH
 
     private volatile Map<String, EventHandler> eventHandlerCache = new HashMap<>();
 
-    private final PreparedStatement insertEventHandlerStatement;
-    private final PreparedStatement selectAllEventHandlersStatement;
-    private final PreparedStatement deleteEventHandlerStatement;
+    private PreparedStatement insertEventHandlerStatement;
+    private PreparedStatement selectAllEventHandlersStatement;
+    private PreparedStatement deleteEventHandlerStatement;
 
-    public CassandraEventHandlerDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties,
-        Statements statements) {
-        super(session, objectMapper, properties);
+    public CassandraEventHandlerDAO() { super(); }
 
+    public CassandraEventHandlerDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties, Statements statements) {
+        super(session, objectMapper, properties, statements);
+    }
+
+    @PostConstruct
+    @Override
+    protected void init() {
+        super.init();
         insertEventHandlerStatement = session.prepare(statements.getInsertEventHandlerStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
         selectAllEventHandlersStatement = session.prepare(statements.getSelectAllEventHandlersStatement())
-            .setConsistencyLevel(properties.getReadConsistencyLevel());
+                .setConsistencyLevel(properties.getReadConsistencyLevel());
         deleteEventHandlerStatement = session.prepare(statements.getDeleteEventHandlerStatement())
-            .setConsistencyLevel(properties.getWriteConsistencyLevel());
+                .setConsistencyLevel(properties.getWriteConsistencyLevel());
 
         long cacheRefreshTime = properties.getEventHandlerCacheRefreshInterval().getSeconds();
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::refreshEventHandlersCache, 0,
-            cacheRefreshTime, TimeUnit.SECONDS);
+                cacheRefreshTime, TimeUnit.SECONDS);
+
     }
 
     @Override

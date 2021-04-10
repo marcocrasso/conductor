@@ -19,25 +19,17 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.PollDataDAO;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import com.netflix.conductor.redis.config.RedisProperties;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Component
-@Conditional(AnyRedisCondition.class)
 public class RedisPollDataDAO extends BaseDynoDAO implements PollDataDAO {
 
     private final static String POLL_DATA = "POLL_DATA";
-
-    public RedisPollDataDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
-        super(jedisProxy, objectMapper, conductorProperties, properties);
-    }
 
     @Override
     public void updateLastPollData(String taskDefName, String domain, String workerId) {

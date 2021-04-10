@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.commands.JedisCommands;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "conductor.db.type", havingValue = "dynomite")
 public class DynomiteClusterConfiguration extends JedisCommandsConfigurer {
 
     protected JedisCommands createJedisCommands(RedisProperties properties, ConductorProperties conductorProperties,

@@ -45,6 +45,7 @@ public class ElasticSearchV6Configuration {
 
     @Bean
     public Client client(ElasticSearchProperties properties) {
+        System.setProperty("es.set.netty.runtime.available.processors", "false");
         Settings settings = Settings.builder()
                 .put("client.transport.ignore_cluster_name", true)
                 .put("client.transport.sniff", true)

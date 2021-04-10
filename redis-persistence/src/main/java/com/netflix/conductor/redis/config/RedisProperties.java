@@ -14,18 +14,21 @@ package com.netflix.conductor.redis.config;
 
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.dynoqueue.RedisQueuesShardingStrategyProvider;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 @ConfigurationProperties("conductor.redis")
 public class RedisProperties {
 
+    @Autowired
     private final ConductorProperties conductorProperties;
 
-    @Autowired
     public RedisProperties(ConductorProperties conductorProperties) {
         this.conductorProperties = conductorProperties;
     }

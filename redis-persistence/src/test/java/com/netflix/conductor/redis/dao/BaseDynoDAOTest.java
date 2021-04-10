@@ -14,11 +14,17 @@ package com.netflix.conductor.redis.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import com.netflix.conductor.redis.config.RedisProperties;
+import com.netflix.conductor.redis.memory.RedisMemoryExecutionDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import redis.clients.jedis.commands.JedisCommands;
+
+import java.time.Duration;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -40,8 +46,15 @@ public class BaseDynoDAOTest {
     @Before
     public void setUp() {
         properties = mock(RedisProperties.class);
+        when(properties.getEventExecutionPersistenceTTL()).thenReturn(Duration.ofSeconds(60));
         conductorProperties = mock(ConductorProperties.class);
-        this.baseDynoDAO = new BaseDynoDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        ConductorProperties conductorProperties = mock(ConductorProperties.class);
+        RedisProperties properties = mock(RedisProperties.class);
+        when(properties.getEventExecutionPersistenceTTL()).thenReturn(Duration.ofSeconds(5));
+        JedisCommands jedisMock = new JedisMock();
+        JedisProxy jedisProxy = new JedisProxy(jedisMock);
+
+        baseDynoDAO = new RedisMemoryExecutionDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test
@@ -52,11 +65,13 @@ public class BaseDynoDAOTest {
         assertEquals("key1.key2", baseDynoDAO.nsKey(keys));
 
         when(properties.getWorkflowNamespacePrefix()).thenReturn("test");
+        baseDynoDAO.properties = properties;
         assertEquals("test", baseDynoDAO.nsKey());
 
         assertEquals("test.key1.key2", baseDynoDAO.nsKey(keys));
 
         when(conductorProperties.getStack()).thenReturn("stack");
+        baseDynoDAO.conductorProperties = conductorProperties;
         assertEquals("test.stack.key1.key2", baseDynoDAO.nsKey(keys));
     }
 }

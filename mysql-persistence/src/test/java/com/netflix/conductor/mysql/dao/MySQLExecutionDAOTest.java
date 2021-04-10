@@ -21,6 +21,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
+import com.netflix.conductor.mysql.config.MySQLProperties;
 import com.netflix.conductor.mysql.util.MySQLDAOTestUtil;
 import java.util.List;
 import org.junit.After;
@@ -55,7 +56,7 @@ public class MySQLExecutionDAOTest extends ExecutionDAOTest {
         mySQLContainer = new MySQLContainer<>(DockerImageName.parse("mysql")).withDatabaseName(name.getMethodName());
         mySQLContainer.start();
         testUtil = new MySQLDAOTestUtil(mySQLContainer, objectMapper, name.getMethodName());
-        executionDAO = new MySQLExecutionDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
+        executionDAO = new MySQLExecutionDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
         testUtil.resetAllData();
     }
 

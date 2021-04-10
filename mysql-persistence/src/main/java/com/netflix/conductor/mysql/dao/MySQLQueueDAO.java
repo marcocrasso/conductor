@@ -18,8 +18,10 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.mysql.config.MySQLProperties;
 import com.netflix.conductor.mysql.util.Query;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -34,12 +36,21 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     private static final Long UNACK_SCHEDULE_MS = 60_000L;
 
-    public MySQLQueueDAO(ObjectMapper objectMapper, DataSource dataSource) {
-        super(objectMapper, dataSource);
+    public MySQLQueueDAO() {
+        super();
+    }
 
+    public MySQLQueueDAO(ObjectMapper objectMapper, DataSource dataSource, MySQLProperties properties) {
+        super(objectMapper, dataSource, properties);
+    }
+
+    @Override
+    @PostConstruct
+    protected void init() {
+        super.init();
         Executors.newSingleThreadScheduledExecutor()
-            .scheduleAtFixedRate(this::processAllUnacks,
-                UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+                .scheduleAtFixedRate(this::processAllUnacks,
+                        UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
         logger.debug(MySQLQueueDAO.class.getName() + " is ready to serve");
     }
 

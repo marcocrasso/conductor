@@ -23,21 +23,21 @@ import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisQueues;
 import com.netflix.dyno.queues.redis.sharding.ShardingStrategy;
 import com.netflix.dyno.queues.shard.DynoShardSupplier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.commands.JedisCommands;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(RedisProperties.class)
-@Conditional(AnyRedisCondition.class)
 public class RedisCommonConfiguration {
 
     public static final String DEFAULT_CLIENT_INJECTION_NAME = "DefaultJedisCommands";
@@ -45,7 +45,6 @@ public class RedisCommonConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisCommonConfiguration.class);
 
-    @Bean
     public ShardSupplier shardSupplier(HostSupplier hostSupplier, RedisProperties properties) {
         if (properties.getAvailabilityZone() == null) {
             throw new ProvisionException(
@@ -57,8 +56,7 @@ public class RedisCommonConfiguration {
         return new DynoShardSupplier(hostSupplier, properties.getDataCenterRegion(), localDC);
     }
 
-    @Bean
-    public TokenMapSupplier tokenMapSupplier() {
+    public static TokenMapSupplier tokenMapSupplier() {
         final List<HostToken> hostTokens = new ArrayList<>();
         return new TokenMapSupplier() {
             @Override
@@ -79,12 +77,10 @@ public class RedisCommonConfiguration {
         };
     }
 
-    @Bean
     public ShardingStrategy shardingStrategy(ShardSupplier shardSupplier, RedisProperties properties) {
         return new RedisQueuesShardingStrategyProvider(shardSupplier, properties).get();
     }
 
-    @Bean
     public RedisQueues redisQueues(@Qualifier(DEFAULT_CLIENT_INJECTION_NAME) JedisCommands jedisCommands,
         @Qualifier(READ_CLIENT_INJECTION_NAME) JedisCommands jedisCommandsRead,
         ShardSupplier shardSupplier, RedisProperties properties, ShardingStrategy shardingStrategy) {

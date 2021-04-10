@@ -27,6 +27,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.mysql.config.MySQLProperties;
 import com.netflix.conductor.mysql.util.MySQLDAOTestUtil;
 import java.util.Arrays;
 import java.util.List;
@@ -253,46 +254,5 @@ public class MySQLMetadataDAOTest {
         metadataDAO.removeTaskDef("test" + UUID.randomUUID().toString());
     }
 
-    @Test
-    public void testEventHandlers() {
-        String event1 = "SQS::arn:account090:sqstest1";
-        String event2 = "SQS::arn:account090:sqstest2";
 
-        EventHandler eventHandler = new EventHandler();
-        eventHandler.setName(UUID.randomUUID().toString());
-        eventHandler.setActive(false);
-        EventHandler.Action action = new EventHandler.Action();
-        action.setAction(EventHandler.Action.Type.start_workflow);
-        action.setStart_workflow(new EventHandler.StartWorkflow());
-        action.getStart_workflow().setName("workflow_x");
-        eventHandler.getActions().add(action);
-        eventHandler.setEvent(event1);
-
-        metadataDAO.addEventHandler(eventHandler);
-        List<EventHandler> all = metadataDAO.getAllEventHandlers();
-        assertNotNull(all);
-        assertEquals(1, all.size());
-        assertEquals(eventHandler.getName(), all.get(0).getName());
-        assertEquals(eventHandler.getEvent(), all.get(0).getEvent());
-
-        List<EventHandler> byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
-        assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());        //event is marked as in-active
-
-        eventHandler.setActive(true);
-        eventHandler.setEvent(event2);
-        metadataDAO.updateEventHandler(eventHandler);
-
-        all = metadataDAO.getAllEventHandlers();
-        assertNotNull(all);
-        assertEquals(1, all.size());
-
-        byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
-        assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());
-
-        byEvents = metadataDAO.getEventHandlersForEvent(event2, true);
-        assertNotNull(byEvents);
-        assertEquals(1, byEvents.size());
-    }
 }

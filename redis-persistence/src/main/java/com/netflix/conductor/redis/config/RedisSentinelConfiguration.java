@@ -17,8 +17,6 @@ import com.netflix.conductor.redis.jedis.JedisSentinel;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +25,10 @@ import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.commands.JedisCommands;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "conductor.db.type", havingValue = "redis_sentinel")
 public class RedisSentinelConfiguration extends JedisCommandsConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(RedisSentinelConfiguration.class);

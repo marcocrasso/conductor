@@ -72,7 +72,7 @@ public class MySQLQueueDAOTest {
         mySQLContainer = new MySQLContainer<>(DockerImageName.parse("mysql")).withDatabaseName(name.getMethodName());
         mySQLContainer.start();
         testUtil = new MySQLDAOTestUtil(mySQLContainer, objectMapper, name.getMethodName());
-        queueDAO = new MySQLQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
+        queueDAO = new MySQLQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
     }
 
     @After

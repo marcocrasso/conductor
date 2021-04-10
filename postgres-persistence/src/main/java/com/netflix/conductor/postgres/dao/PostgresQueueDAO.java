@@ -18,6 +18,10 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.postgres.config.PostgresProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,15 +30,23 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
     private static final Long UNACK_SCHEDULE_MS = 60_000L;
 
-    public PostgresQueueDAO(ObjectMapper om, DataSource ds) {
-        super(om, ds);
+    public PostgresQueueDAO() { super(); }
 
+    public PostgresQueueDAO(ObjectMapper objectMapper, DataSource dataSource, PostgresProperties properties) {
+        super(objectMapper, dataSource, properties);
+    }
+
+    @Override
+    @PostConstruct
+    protected void init() {
+        super.init();
         Executors.newSingleThreadScheduledExecutor()
             .scheduleAtFixedRate(this::processAllUnacks,
                 UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);

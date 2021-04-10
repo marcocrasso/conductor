@@ -19,7 +19,6 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.EventHandlerDAO;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import java.util.LinkedList;
@@ -28,11 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
-@Component
-@Conditional(AnyRedisCondition.class)
+import javax.annotation.PostConstruct;
+
 public class RedisEventHandlerDAO extends BaseDynoDAO implements EventHandlerDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisEventHandlerDAO.class);
@@ -40,9 +38,12 @@ public class RedisEventHandlerDAO extends BaseDynoDAO implements EventHandlerDAO
     private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
     private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
 
-    public RedisEventHandlerDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
-        super(jedisProxy, objectMapper, conductorProperties, properties);
+    public RedisEventHandlerDAO(JedisProxy jedisProxy, ObjectMapper objectMapper, ConductorProperties conductorProperties, RedisProperties properties) {
+        super();
+    }
+
+    public RedisEventHandlerDAO() {
+        super();
     }
 
     @Override

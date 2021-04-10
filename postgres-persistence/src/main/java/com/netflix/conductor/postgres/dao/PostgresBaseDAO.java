@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.postgres.config.PostgresDataSourceProvider;
+import com.netflix.conductor.postgres.config.PostgresProperties;
 import com.netflix.conductor.postgres.util.ExecuteFunction;
 import com.netflix.conductor.postgres.util.LazyToString;
 import com.netflix.conductor.postgres.util.Query;
@@ -37,9 +39,11 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class PostgresBaseDAO {
 
@@ -54,12 +58,28 @@ public abstract class PostgresBaseDAO {
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final ObjectMapper objectMapper;
-    protected final DataSource dataSource;
 
-    protected PostgresBaseDAO(ObjectMapper objectMapper, DataSource dataSource) {
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    @Autowired
+    PostgresProperties properties;
+
+    protected DataSource dataSource;
+
+    public PostgresBaseDAO() {}
+
+    public PostgresBaseDAO(ObjectMapper objectMapper, DataSource dataSource, PostgresProperties properties) {
         this.objectMapper = objectMapper;
         this.dataSource = dataSource;
+        this.properties = properties;
+        init();
+    }
+
+    @PostConstruct
+    protected void init() {
+        if (dataSource==null)
+            dataSource = new PostgresDataSourceProvider(properties).getDataSource();
     }
 
     protected final LazyToString getCallingMethod() {

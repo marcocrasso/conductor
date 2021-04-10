@@ -41,7 +41,7 @@ import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@TestPropertySource(properties = {"conductor.indexing.enabled=true", "conductor.elasticsearch.version=6"})
+@TestPropertySource(properties = {"conductor.indexing.enabled=true", "conductor.elasticsearch.version=6",  "conductor.integ-test.queueSpyEnabled=false"})
 public abstract class AbstractEndToEndTest {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractEndToEndTest.class);

@@ -1,0 +1,5 @@
+com.netflix.conductor.redis.cluster.RedisClusterExecutionDAO
+com.netflix.conductor.redis.dynomite.RedisDynomiteExecutionDAO
+com.netflix.conductor.redis.memory.RedisMemoryExecutionDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelExecutionDAO
+com.netflix.conductor.redis.standalone.RedisStandaloneExecutionDAO

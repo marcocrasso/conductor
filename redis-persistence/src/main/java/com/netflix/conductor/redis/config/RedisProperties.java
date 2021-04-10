@@ -14,7 +14,8 @@ package com.netflix.conductor.redis.config;
 
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.dynoqueue.RedisQueuesShardingStrategyProvider;
-import com.netflix.dyno.connectionpool.RetryPolicy.RetryPolicyFactory;
+
+import com.netflix.dyno.connectionpool.RetryPolicy;
 import com.netflix.dyno.connectionpool.impl.RetryNTimes;
 import com.netflix.dyno.connectionpool.impl.RunOnce;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,9 @@ import java.time.temporal.ChronoUnit;
 @ConfigurationProperties("conductor.redis")
 public class RedisProperties {
 
+    @Autowired
     private final ConductorProperties conductorProperties;
 
-    @Autowired
     public RedisProperties(ConductorProperties conductorProperties) {
         this.conductorProperties = conductorProperties;
     }
@@ -227,7 +228,7 @@ public class RedisProperties {
         return prefix;
     }
 
-    public RetryPolicyFactory getConnectionRetryPolicy() {
+    public RetryPolicy.RetryPolicyFactory getConnectionRetryPolicy() {
         if (getMaxRetryAttempts() == 0) {
             return RunOnce::new;
         } else {

@@ -20,6 +20,7 @@ import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.testcontainers.containers.MySQLContainer;
 
 import javax.sql.DataSource;
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import static org.mockito.Mockito.mock;
@@ -43,15 +44,13 @@ public class MySQLDAOTestUtil {
 
         when(properties.getTaskDefCacheRefreshInterval()).thenReturn(Duration.ofSeconds(60));
 
-        // Prevent DB from getting exhausted during rapid testing
-        dataSource.setMaximumPoolSize(8);
-
         flywayMigrate(dataSource);
     }
 
     private void flywayMigrate(DataSource dataSource) {
         FluentConfiguration fluentConfiguration = Flyway.configure()
                 .table("schema_version")
+                .locations(Paths.get("db", "migration_mysql").toString())
                 .dataSource(dataSource)
                 .placeholderReplacement(false);
 

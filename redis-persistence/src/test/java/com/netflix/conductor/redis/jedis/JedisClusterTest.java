@@ -525,7 +525,7 @@ public class JedisClusterTest {
                 new AbstractMap.SimpleEntry<>("key2".getBytes(), "val2".getBytes())));
 
         when(mockCluster.hscan(Mockito.any(), Mockito.any(), Mockito.any(ScanParams.class))).thenReturn(scanResult);
-        ScanResult<Map.Entry<String, String>> result = jedisCluster.hscan("key", "cursor", new ScanParams());
+        ScanResult<Entry<String, String>> result = jedisCluster.hscan("key", "cursor", new ScanParams());
 
         assertEquals("cursor", result.getCursor());
         assertEquals(2, result.getResult().size());

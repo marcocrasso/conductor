@@ -33,61 +33,45 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(CassandraProperties.class)
-@ConditionalOnProperty(name = "conductor.db.type", havingValue = "cassandra")
 public class CassandraConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
 
-    @Bean
-    public Cluster cluster(CassandraProperties properties) {
+    public static Cluster cluster(CassandraProperties properties) {
         String host = properties.getHostAddress();
         int port = properties.getPort();
 
         LOGGER.info("Connecting to cassandra cluster with host:{}, port:{}", host, port);
 
-        Cluster cluster = Cluster.builder()
-            .addContactPoint(host)
-            .withPort(port)
-            .build();
-
+        Cluster cluster;
+        try {
+            Class.forName("com.codahale.metrics.JmxReporter");
+            cluster = Cluster.builder()
+                    .addContactPoint(host)
+                    .withPort(port)
+                    .build();
+        } catch (ClassNotFoundException cnfex) {
+            LOGGER.warn("Include com/codahale/metrics/JmxReporter in your classpath as a dependency " +
+                    "to enable reporting");
+            cluster = Cluster.builder()
+                    .addContactPoint(host)
+                    .withPort(port)
+                    .withoutJMXReporting()
+                    .build();
+        }
         Metadata metadata = cluster.getMetadata();
         LOGGER.info("Connected to cluster: {}", metadata.getClusterName());
         metadata.getAllHosts().forEach(h -> LOGGER.info("Datacenter:{}, host:{}, rack: {}", h.getDatacenter(),
-            h.getEndPoint().resolve().getHostName(), h.getRack()));
+                h.getEndPoint().resolve().getHostName(), h.getRack()));
         return cluster;
     }
 
-    @Bean
-    public Session session(Cluster cluster) {
+    public static Session session(Cluster cluster) {
         LOGGER.info("Initializing cassandra session");
         return cluster.connect();
     }
 
-    @Bean
-    public MetadataDAO cassandraMetadataDAO(Session session, ObjectMapper objectMapper, CassandraProperties properties,
-        Statements statements) {
-        return new CassandraMetadataDAO(session, objectMapper, properties, statements);
-    }
-
-    @Bean
-    public ExecutionDAO cassandraExecutionDAO(Session session, ObjectMapper objectMapper,
-        CassandraProperties properties, Statements statements) {
-        return new CassandraExecutionDAO(session, objectMapper, properties, statements);
-    }
-
-    @Bean
-    public EventHandlerDAO cassandraEventHandlerDAO(Session session, ObjectMapper objectMapper,
-        CassandraProperties properties, Statements statements) {
-        return new CassandraEventHandlerDAO(session, objectMapper, properties, statements);
-    }
-
-    @Bean
-    public CassandraPollDataDAO cassandraPollDataDAO() {
-        return new CassandraPollDataDAO();
-    }
-
-    @Bean
-    public Statements statements(CassandraProperties cassandraProperties) {
+    public static Statements statements(CassandraProperties cassandraProperties) {
         return new Statements(cassandraProperties.getKeyspace());
     }
 }

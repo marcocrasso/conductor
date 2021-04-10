@@ -23,6 +23,8 @@ import com.netflix.conductor.dao.ExecutionDAOTest;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
+import java.time.Duration;
+import com.netflix.conductor.redis.memory.RedisMemoryExecutionDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +33,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.commands.JedisCommands;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        executionDAO = new RedisExecutionDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        executionDAO = new RedisMemoryExecutionDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test

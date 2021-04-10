@@ -12,10 +12,15 @@
  */
 package com.netflix.conductor.redis.dao;
 
+import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.redis.config.RedisCommonConfiguration;
 import com.netflix.conductor.redis.config.RedisProperties;
+import com.netflix.conductor.redis.dynomite.RedisDynomiteQueueDAO;
 import com.netflix.conductor.redis.dynoqueue.RedisQueuesShardingStrategyProvider;
 import com.netflix.conductor.redis.jedis.JedisMock;
+import com.netflix.conductor.redis.jedis.JedisProxy;
+import com.netflix.conductor.redis.memory.RedisMemoryExecutionDAO;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisQueues;
@@ -24,8 +29,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.util.Assert;
 import redis.clients.jedis.commands.JedisCommands;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +42,7 @@ import java.util.Set;
 import static com.netflix.conductor.redis.dynoqueue.RedisQueuesShardingStrategyProvider.LOCAL_ONLY_STRATEGY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +52,10 @@ public class DynoQueueDAOTest {
 
     @Before
     public void init() {
+        ConductorProperties conductorProperties = mock(ConductorProperties.class);
         RedisProperties properties = mock(RedisProperties.class);
         when(properties.getQueueShardingStrategy()).thenReturn(LOCAL_ONLY_STRATEGY);
+
         JedisCommands jedisMock = new JedisMock();
         ShardSupplier shardSupplier = new ShardSupplier() {
 
@@ -67,7 +77,18 @@ public class DynoQueueDAOTest {
         ShardingStrategy shardingStrategy = new RedisQueuesShardingStrategyProvider(shardSupplier, properties).get();
         RedisQueues redisQueues = new RedisQueues(jedisMock, jedisMock, "", shardSupplier, 60_000, 60_000,
             shardingStrategy);
-        queueDAO = new DynoQueueDAO(redisQueues);
+
+        RedisCommonConfiguration configuration = mock(RedisCommonConfiguration.class);
+        when(configuration.shardingStrategy(shardSupplier, properties)).thenReturn(shardingStrategy);
+        when(configuration.redisQueues(any(), any(), any(), any(), any())).thenReturn(redisQueues);
+
+        queueDAO = new RedisDynomiteQueueDAO(conductorProperties, properties) {
+
+            @Override
+            public void init() {
+                this.queues = redisQueues;
+            }
+        };
     }
 
     @Rule

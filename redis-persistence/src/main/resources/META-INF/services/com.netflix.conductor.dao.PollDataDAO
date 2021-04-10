@@ -1,0 +1,5 @@
+com.netflix.conductor.redis.cluster.RedisClusterPollDataDAO
+com.netflix.conductor.redis.dynomite.RedisDynomitePollDataDAO
+com.netflix.conductor.redis.memory.RedisMemoryPollDataDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelPollDataDAO
+com.netflix.conductor.redis.standalone.RedisStandalonePollDataDAO

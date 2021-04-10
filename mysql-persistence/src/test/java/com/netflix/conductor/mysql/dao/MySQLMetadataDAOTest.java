@@ -14,7 +14,6 @@ package com.netflix.conductor.mysql.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
-import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
@@ -33,21 +32,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
 import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -251,46 +243,5 @@ public class MySQLMetadataDAOTest {
         metadataDAO.removeTaskDef("test" + UUID.randomUUID().toString());
     }
 
-    @Test
-    public void testEventHandlers() {
-        String event1 = "SQS::arn:account090:sqstest1";
-        String event2 = "SQS::arn:account090:sqstest2";
 
-        EventHandler eventHandler = new EventHandler();
-        eventHandler.setName(UUID.randomUUID().toString());
-        eventHandler.setActive(false);
-        EventHandler.Action action = new EventHandler.Action();
-        action.setAction(EventHandler.Action.Type.start_workflow);
-        action.setStart_workflow(new EventHandler.StartWorkflow());
-        action.getStart_workflow().setName("workflow_x");
-        eventHandler.getActions().add(action);
-        eventHandler.setEvent(event1);
-
-        metadataDAO.addEventHandler(eventHandler);
-        List<EventHandler> all = metadataDAO.getAllEventHandlers();
-        assertNotNull(all);
-        assertEquals(1, all.size());
-        assertEquals(eventHandler.getName(), all.get(0).getName());
-        assertEquals(eventHandler.getEvent(), all.get(0).getEvent());
-
-        List<EventHandler> byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
-        assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());        //event is marked as in-active
-
-        eventHandler.setActive(true);
-        eventHandler.setEvent(event2);
-        metadataDAO.updateEventHandler(eventHandler);
-
-        all = metadataDAO.getAllEventHandlers();
-        assertNotNull(all);
-        assertEquals(1, all.size());
-
-        byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
-        assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());
-
-        byEvents = metadataDAO.getEventHandlersForEvent(event2, true);
-        assertNotNull(byEvents);
-        assertEquals(1, byEvents.size());
-    }
 }

@@ -25,8 +25,6 @@ import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.commands.JedisCommands;
 
-@Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "conductor.db.type", havingValue = "redis_cluster")
 public class RedisClusterConfiguration extends JedisCommandsConfigurer {
 
     @Override

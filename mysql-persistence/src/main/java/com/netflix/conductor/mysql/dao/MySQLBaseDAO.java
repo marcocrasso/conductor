@@ -18,14 +18,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.exception.ApplicationException;
-import com.netflix.conductor.mysql.util.ExecuteFunction;
-import com.netflix.conductor.mysql.util.LazyToString;
-import com.netflix.conductor.mysql.util.Query;
-import com.netflix.conductor.mysql.util.QueryFunction;
-import com.netflix.conductor.mysql.util.TransactionalFunction;
+import com.netflix.conductor.mysql.config.MySQLProperties;
+import com.netflix.conductor.mysql.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
@@ -37,12 +37,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static com.mysql.cj.exceptions.MysqlErrorNumbers.ER_LOCK_DEADLOCK;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.INTERNAL_ERROR;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 
+
+
+@EnableConfigurationProperties(MySQLProperties.class)
 public abstract class MySQLBaseDAO {
 
     private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME = "conductor.mysql.deadlock.retry.max";
@@ -54,12 +55,30 @@ public abstract class MySQLBaseDAO {
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final ObjectMapper objectMapper;
-    protected final DataSource dataSource;
 
-    protected MySQLBaseDAO(ObjectMapper om, DataSource dataSource) {
+    @Autowired
+    MySQLProperties properties;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    @Autowired
+    protected DataSource dataSource;
+
+    public MySQLBaseDAO() {
+
+    }
+
+    protected MySQLBaseDAO(ObjectMapper om, DataSource dataSource, MySQLProperties properties) {
         this.objectMapper = om;
         this.dataSource = dataSource;
+        this.properties = properties;
+        init();
+    }
+
+    @PostConstruct
+    protected void init() {
+
     }
 
     protected final LazyToString getCallingMethod() {

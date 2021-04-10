@@ -22,6 +22,10 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
+import java.util.List;
+import java.util.UUID;
+
+import com.netflix.conductor.redis.memory.RedisMemoryEventHandlerDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,9 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.commands.JedisCommands;
-
-import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,7 +54,7 @@ public class RedisEventHandlerDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisEventHandlerDAO = new RedisEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisEventHandlerDAO = new RedisMemoryEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test

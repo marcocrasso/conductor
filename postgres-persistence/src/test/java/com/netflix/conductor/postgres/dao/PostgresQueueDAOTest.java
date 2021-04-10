@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -40,19 +41,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class PostgresQueueDAOTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQueueDAOTest.class);
 
     private PostgresDAOTestUtil testUtil;
+
     private PostgresQueueDAO queueDAO;
 
     @Autowired
@@ -71,8 +70,10 @@ public class PostgresQueueDAOTest {
         postgreSQLContainer =
             new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
+
         testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
-        queueDAO = new PostgresQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
+        queueDAO = new PostgresQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
+
     }
 
     @After

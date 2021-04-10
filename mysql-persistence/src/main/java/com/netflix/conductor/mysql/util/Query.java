@@ -21,12 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -130,7 +125,7 @@ public class Query implements AutoCloseable {
     }
 
     /**
-     * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link java.sql.Date}.
+     * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link Date}.
      * @param date The {@literal java.util.Date} to bind.
      * @return {@literal this}
      */
@@ -139,7 +134,7 @@ public class Query implements AutoCloseable {
     }
 
     /**
-     * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link java.sql.Timestamp}.
+     * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link Timestamp}.
      * @param date The {@literal java.util.Date} to bind.
      * @return {@literal this}
      */
@@ -148,7 +143,7 @@ public class Query implements AutoCloseable {
     }
 
     /**
-     * Bind the given epoch millis to the PreparedStatement as a {@link java.sql.Timestamp}.
+     * Bind the given epoch millis to the PreparedStatement as a {@link Timestamp}.
      * @param epochMillis The epoch ms to create a new {@literal Timestamp} from.
      * @return {@literal this}
      */

@@ -22,14 +22,13 @@ import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.redis.config.RedisProperties;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -41,9 +40,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@Component
-@Conditional(AnyRedisCondition.class)
-public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
+public abstract class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisMetadataDAO.class);
 
@@ -54,15 +51,6 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
     private final static String LATEST = "latest";
     private static final String className = RedisMetadataDAO.class.getSimpleName();
     private Map<String, TaskDef> taskDefCache = new HashMap<>();
-
-    public RedisMetadataDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
-        super(jedisProxy, objectMapper, conductorProperties, properties);
-        refreshTaskDefs();
-        long cacheRefreshTime = properties.getTaskDefCacheRefreshInterval().getSeconds();
-        Executors.newSingleThreadScheduledExecutor()
-            .scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
-    }
 
     @Override
     public void createTaskDef(TaskDef taskDef) {
@@ -84,7 +72,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
         return taskDef.getName();
     }
 
-    private void refreshTaskDefs() {
+    protected void refreshTaskDefs() {
         try {
             Map<String, TaskDef> map = new HashMap<>();
             getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));

@@ -40,7 +40,8 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(SpringRunner.class)
 public class PostgresExecutionDAOTest extends ExecutionDAOTest {
 
-    private PostgresDAOTestUtil testPostgres;
+    private PostgresDAOTestUtil testUtil;
+
     private PostgresExecutionDAO executionDAO;
 
     @Autowired
@@ -56,16 +57,15 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         postgreSQLContainer =
             new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
-        testPostgres = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
-        executionDAO = new PostgresExecutionDAO(
-            testPostgres.getObjectMapper(),
-            testPostgres.getDataSource()
-        );
+
+        testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
+        executionDAO = new PostgresExecutionDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestProperties());
+
     }
 
     @After
     public void teardown() {
-        testPostgres.getDataSource().close();
+        testUtil.getDataSource().close();
     }
 
     @Test

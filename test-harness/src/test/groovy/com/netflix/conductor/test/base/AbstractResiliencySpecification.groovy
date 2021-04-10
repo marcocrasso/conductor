@@ -14,6 +14,7 @@ package com.netflix.conductor.test.base
 
 import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.redis.dao.DynoQueueDAO
+import com.netflix.conductor.redis.dynomite.RedisDynomiteQueueDAO
 import com.netflix.conductor.redis.jedis.JedisMock
 import com.netflix.dyno.connectionpool.Host
 import com.netflix.dyno.queues.ShardSupplier
@@ -26,6 +27,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.test.context.TestPropertySource
 import redis.clients.jedis.commands.JedisCommands
 import spock.mock.DetachedMockFactory
+
+import javax.annotation.PostConstruct
 
 @TestPropertySource(properties = [
         "conductor.system-task-workers.enabled=false",
@@ -43,25 +46,7 @@ abstract class AbstractResiliencySpecification extends AbstractSpecification {
         @ConditionalOnProperty(name = "conductor.integ-test.queue-spy.enabled", havingValue = "true")
         QueueDAO SpyQueueDAO() {
             DetachedMockFactory detachedMockFactory = new DetachedMockFactory()
-            JedisCommands jedisMock = new JedisMock()
-            ShardSupplier shardSupplier = new ShardSupplier() {
-                @Override
-                Set<String> getQueueShards() {
-                    return new HashSet<>(Collections.singletonList("a"))
-                }
-
-                @Override
-                String getCurrentShard() {
-                    return "a"
-                }
-
-                @Override
-                String getShardForHost(Host host) {
-                    return "a"
-                }
-            }
-            RedisQueues redisQueues = new RedisQueues(jedisMock, jedisMock, "mockedQueues", shardSupplier, 60000, 120000)
-            DynoQueueDAO dynoQueueDAO = new DynoQueueDAO(redisQueues)
+            DynoQueueDAO dynoQueueDAO = new SpyableQueue()
 
             return detachedMockFactory.Spy(dynoQueueDAO)
         }

@@ -21,12 +21,12 @@ dependencies {
     implementation project(':conductor-rest')
     implementation project(':conductor-core')
     implementation project(':conductor-contribs')
+    implementation project(':conductor-service-loader')
     implementation project(':conductor-redis-persistence')
-    implementation project(':conductor-cassandra-persistence')
     implementation project(':conductor-postgres-persistence')
+    implementation project(':conductor-cassandra-persistence')
     implementation project(':conductor-mysql-persistence')
     implementation project(':conductor-es6-persistence')
-    implementation project(':conductor-grpc-server')
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -43,6 +43,8 @@ dependencies {
 
     testImplementation project(':conductor-rest')
     testImplementation project(':conductor-common')
+    testImplementation project(':conductor-common').sourceSets.test.output
+
     testImplementation "io.grpc:grpc-testing:${revGrpc}"
     testImplementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
     testImplementation "io.grpc:grpc-protobuf:${revGrpc}"

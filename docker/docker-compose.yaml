@@ -1,9 +1,9 @@
-version: '2.3'
+version: '3'
 
 services:
   conductor-server:
     environment:
-      - CONFIG_PROP=config.properties
+      - CONFIG_PROP=${CONDUCTOR_CONFIG_FILE:-config.properties}
     image: conductor:server
     build:
       context: ../

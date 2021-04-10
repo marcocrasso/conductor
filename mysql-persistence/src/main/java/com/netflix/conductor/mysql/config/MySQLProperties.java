@@ -12,16 +12,19 @@
  */
 package com.netflix.conductor.mysql.config;
 
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationUnit;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 
-import java.sql.Connection;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
-@ConfigurationProperties("conductor.mysql")
+@DependsOn({"flyway", "flywayInitializer"})
+@Import(DataSourceAutoConfiguration.class)
+@Configuration(proxyBeanMethods = false)
+@ConfigurationProperties(prefix = "conductor.mysql")
 public class MySQLProperties {
-
 
     /**
      * The time (in seconds) after which the in-memory task definitions cache will be refreshed

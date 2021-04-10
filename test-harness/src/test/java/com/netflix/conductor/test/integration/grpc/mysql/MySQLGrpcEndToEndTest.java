@@ -18,18 +18,28 @@ import com.netflix.conductor.client.grpc.WorkflowClient;
 import com.netflix.conductor.test.integration.grpc.AbstractGrpcEndToEndTest;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+@Import(DataSourceAutoConfiguration.class)
 @RunWith(SpringRunner.class)
 @TestPropertySource(properties = {
-    "conductor.db.type=mysql",
+    "com.netflix.conductor.dao.ExecutionDAO=com.netflix.conductor.mysql.dao.MySQLExecutionDAO",
+    "com.netflix.conductor.dao.EventHandlerDAO=com.netflix.conductor.mysql.dao.MySQLEventHandlerDAO",
+    "com.netflix.conductor.dao.MetadataDAO=com.netflix.conductor.mysql.dao.MySQLMetadataDAO",
+    "com.netflix.conductor.dao.PollDataDAO=com.netflix.conductor.mysql.dao.MySQLPollDataDAO",
+    "com.netflix.conductor.dao.QueueDAO=com.netflix.conductor.mysql.dao.MySQLQueueDAO",
+    "com.netflix.conductor.dao.RateLimitingDAO=com.netflix.conductor.mysql.dao.MySQLRateLimitingDAO",
     "conductor.grpc-server.port=8094",
     "spring.datasource.url=jdbc:tc:mysql:///conductor", // "tc" prefix starts the MySql container
     "spring.datasource.username=root",
     "spring.datasource.password=root",
     "spring.datasource.hikari.maximum-pool-size=8",
-    "spring.datasource.hikari.minimum-idle=300000"
+    "spring.datasource.hikari.minimum-idle=300000",
+    "spring.flyway.locations=classpath:db/migration_mysql",
+    "spring.flyway.enabled=true"
 })
 public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 

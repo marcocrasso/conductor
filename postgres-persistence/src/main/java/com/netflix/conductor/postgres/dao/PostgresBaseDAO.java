@@ -12,23 +12,23 @@
  */
 package com.netflix.conductor.postgres.dao;
 
-import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.INTERNAL_ERROR;
-import static java.lang.Integer.parseInt;
-import static java.lang.System.getProperty;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.exception.ApplicationException;
-import com.netflix.conductor.postgres.util.ExecuteFunction;
-import com.netflix.conductor.postgres.util.LazyToString;
-import com.netflix.conductor.postgres.util.Query;
-import com.netflix.conductor.postgres.util.QueryFunction;
-import com.netflix.conductor.postgres.util.TransactionalFunction;
+import com.netflix.conductor.postgres.config.PostgresProperties;
+import com.netflix.conductor.postgres.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Import;
+
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -37,10 +37,12 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+
+@EnableConfigurationProperties(PostgresProperties.class)
 public abstract class PostgresBaseDAO {
 
     private static final String ER_LOCK_DEADLOCK = "40P01";
@@ -49,25 +51,41 @@ public abstract class PostgresBaseDAO {
     private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE = "3";
     private static final int MAX_RETRY_ON_DEADLOCK = getMaxRetriesOnDeadLock();
     private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
-        PostgresBaseDAO.class.getName(),
-        Thread.class.getName()
+            PostgresBaseDAO.class.getName(),
+            Thread.class.getName()
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final ObjectMapper objectMapper;
-    protected final DataSource dataSource;
 
-    protected PostgresBaseDAO(ObjectMapper objectMapper, DataSource dataSource) {
-        this.objectMapper = objectMapper;
-        this.dataSource = dataSource;
+    @Autowired
+    protected ObjectMapper objectMapper;
+    @Autowired
+    protected DataSource dataSource;
+    @Autowired
+    PostgresProperties properties;
+
+    public PostgresBaseDAO() {
     }
 
-    protected final LazyToString getCallingMethod() {
-        return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
-            .filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
-            .findFirst()
-            .map(StackTraceElement::getMethodName)
-            .orElseThrow(() -> new NullPointerException("Cannot find Caller")));
+    public PostgresBaseDAO(ObjectMapper objectMapper, DataSource dataSource, PostgresProperties properties) {
+        this.objectMapper = objectMapper;
+        this.dataSource = dataSource;
+        this.properties = properties;
+        init();
+    }
+
+    private static int getMaxRetriesOnDeadLock() {
+        try {
+            return parseInt(
+                    getProperty(MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME, MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE));
+        } catch (Exception e) {
+            return parseInt(MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE);
+        }
+    }
+
+    @PostConstruct
+    protected void init() {
+
     }
 
     protected String toJson(Object value) {
@@ -139,19 +157,12 @@ public abstract class PostgresBaseDAO {
         }
     }
 
-    <R> R getWithRetriedTransactions(final TransactionalFunction<R> function) {
-        try {
-            return new RetryUtil<R>().retryOnException(
-                () -> getWithTransaction(function),
-                this::isDeadLockError,
-                null,
-                MAX_RETRY_ON_DEADLOCK,
-                "retry on deadlock",
-                "transactional"
-            );
-        } catch (RuntimeException e) {
-            throw (ApplicationException) e.getCause();
-        }
+    protected final LazyToString getCallingMethod() {
+        return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
+                .filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
+                .findFirst()
+                .map(StackTraceElement::getMethodName)
+                .orElseThrow(() -> new NullPointerException("Cannot find Caller")));
     }
 
     protected <R> R getWithTransactionWithOutErrorPropagation(TransactionalFunction<R> function) {
@@ -253,13 +264,19 @@ public abstract class PostgresBaseDAO {
         withTransaction(tx -> execute(tx, query, function));
     }
 
-    private boolean isDeadLockError(Throwable throwable) {
-        SQLException sqlException = findCauseSQLException(throwable);
-        if (sqlException == null) {
-            return false;
+    <R> R getWithRetriedTransactions(final TransactionalFunction<R> function) {
+        try {
+            return new RetryUtil<R>().retryOnException(
+                    () -> getWithTransaction(function),
+                    this::isDeadLockError,
+                    null,
+                    MAX_RETRY_ON_DEADLOCK,
+                    "retry on deadlock",
+                    "transactional"
+            );
+        } catch (RuntimeException e) {
+            throw (ApplicationException) e.getCause();
         }
-        return ER_LOCK_DEADLOCK.equals(sqlException.getSQLState())
-            || ER_SERIALIZATION_FAILURE.equals(sqlException.getSQLState());
     }
 
     private SQLException findCauseSQLException(Throwable throwable) {
@@ -270,12 +287,12 @@ public abstract class PostgresBaseDAO {
         return (SQLException) causeException;
     }
 
-    private static int getMaxRetriesOnDeadLock() {
-        try {
-            return parseInt(
-                getProperty(MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME, MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE));
-        } catch (Exception e) {
-            return parseInt(MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE);
+    private boolean isDeadLockError(Throwable throwable) {
+        SQLException sqlException = findCauseSQLException(throwable);
+        if (sqlException == null) {
+            return false;
         }
+        return ER_LOCK_DEADLOCK.equals(sqlException.getSQLState())
+                || ER_SERIALIZATION_FAILURE.equals(sqlException.getSQLState());
     }
 }

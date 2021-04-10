@@ -1,0 +1,5 @@
+com.netflix.conductor.redis.cluster.RedisClusterRateLimitingDAO
+com.netflix.conductor.redis.dynomite.RedisDynomiteRateLimitingDAO
+com.netflix.conductor.redis.memory.RedisMemoryRateLimitingDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelRateLimitingDAO
+com.netflix.conductor.redis.standalone.RedisStandaloneRateLimitingDAO

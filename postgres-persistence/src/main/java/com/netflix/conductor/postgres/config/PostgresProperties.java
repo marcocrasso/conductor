@@ -12,16 +12,25 @@
  */
 package com.netflix.conductor.postgres.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationUnit;
 
-import java.sql.Connection;
+import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-@ConfigurationProperties("conductor.postgres")
+@DependsOn({"flyway", "flywayInitializer"})
+@Import(DataSourceAutoConfiguration.class)
+@Configuration(proxyBeanMethods = false)
+@ConfigurationProperties(prefix = "conductor.postgres")
 public class PostgresProperties {
-
 
     /**
      * The time in seconds after which the in-memory task definitions cache will be refreshed

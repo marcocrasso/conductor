@@ -23,13 +23,20 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @TestPropertySource(properties = {
-    "conductor.db.type=postgres",
+    "com.netflix.conductor.dao.ExecutionDAO=com.netflix.conductor.postgres.dao.PostgresExecutionDAO",
+    "com.netflix.conductor.dao.EventHandlerDAO=com.netflix.conductor.postgres.dao.PostgresEventHandlerDAO",
+    "com.netflix.conductor.dao.MetadataDAO=com.netflix.conductor.postgres.dao.PostgresMetadataDAO",
+    "com.netflix.conductor.dao.PollDataDAO=com.netflix.conductor.postgres.dao.PostgresPollDataDAO",
+    "com.netflix.conductor.dao.QueueDAO=com.netflix.conductor.postgres.dao.PostgresQueueDAO",
+    "com.netflix.conductor.dao.RateLimitingDAO=com.netflix.conductor.postgres.dao.PostgresRateLimitingDAO",
     "conductor.grpc-server.port=8098",
     "spring.datasource.url=jdbc:tc:postgresql:///conductor", // "tc" prefix starts the Postgres container
     "spring.datasource.username=postgres",
     "spring.datasource.password=postgres",
     "spring.datasource.hikari.maximum-pool-size=8",
-    "spring.datasource.hikari.minimum-idle=300000"
+    "spring.datasource.hikari.minimum-idle=300000",
+    "spring.flyway.locations=classpath:db/migration_postgres",
+    "spring.flyway.enabled=true"
 })
 public class PostgresGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 

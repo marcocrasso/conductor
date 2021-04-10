@@ -12,14 +12,22 @@
  */
 package com.netflix.conductor.redis.dao;
 
+import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
+import com.netflix.conductor.redis.config.JedisCommandsConfigurer;
+import com.netflix.conductor.redis.config.RedisCommonConfiguration;
+import com.netflix.conductor.redis.config.RedisProperties;
+import com.netflix.dyno.connectionpool.HostSupplier;
+import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.queues.DynoQueue;
 import com.netflix.dyno.queues.Message;
+import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisQueues;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import redis.clients.jedis.commands.JedisCommands;
 
+import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +35,40 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Component
-@Conditional(AnyRedisCondition.class)
+@EnableConfigurationProperties(RedisProperties.class)
 public class DynoQueueDAO implements QueueDAO {
 
-    private final RedisQueues queues;
+    @Autowired
+    protected RedisCommonConfiguration configuration;
 
-    public DynoQueueDAO(RedisQueues queues) {
-        this.queues = queues;
+    @Autowired
+    protected RedisProperties properties;
+
+    @Autowired
+    protected ConductorProperties conductorProperties;
+
+    protected TokenMapSupplier tokenMapSupplier = RedisCommonConfiguration.tokenMapSupplier();
+
+    protected JedisCommandsConfigurer configurator;
+
+    protected RedisQueues queues;
+
+    public DynoQueueDAO() {
+    }
+
+    @PostConstruct
+    public void init() {
+        HostSupplier hs =  configurator.hostSupplier(properties);
+        JedisCommands jcmds = configurator.jedisCommands(this.properties,
+                this.conductorProperties,
+                hs,
+                this.tokenMapSupplier);
+        JedisCommands rcmds = configurator.readJedisCommands(this.properties,
+                this.conductorProperties,
+                configurator.hostSupplier(properties),
+                this.tokenMapSupplier);
+        ShardSupplier ss = configuration.shardSupplier(hs, properties);
+        queues = configuration.redisQueues(jcmds, rcmds, ss, properties, configuration.shardingStrategy(ss, properties));
     }
 
     @Override

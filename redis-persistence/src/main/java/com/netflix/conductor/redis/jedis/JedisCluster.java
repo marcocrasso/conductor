@@ -689,10 +689,10 @@ public class JedisCluster implements JedisCommands {
     }
 
     @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor, ScanParams params) {
-        ScanResult<Map.Entry<byte[], byte[]>> scanResult = jedisCluster
+    public ScanResult<Entry<String, String>> hscan(String key, String cursor, ScanParams params) {
+        ScanResult<Entry<byte[], byte[]>> scanResult = jedisCluster
             .hscan(key.getBytes(), cursor.getBytes(), params);
-        List<Map.Entry<String, String>> results = scanResult.getResult()
+        List<Entry<String, String>> results = scanResult.getResult()
             .stream()
             .map(entry -> new AbstractMap.SimpleEntry<>(new String(entry.getKey()),
                 new String(entry.getValue())))

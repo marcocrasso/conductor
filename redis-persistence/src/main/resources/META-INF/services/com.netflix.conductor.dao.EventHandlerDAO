@@ -1,0 +1,6 @@
+
+com.netflix.conductor.redis.cluster.RedisClusterEventHandlerDAO
+com.netflix.conductor.redis.dynomite.RedisDynomiteEventHandlerDAO
+com.netflix.conductor.redis.memory.RedisMemoryEventHandlerDAO
+com.netflix.conductor.redis.sentinel.RedisSentinelEventHandlerDAO
+com.netflix.conductor.redis.standalone.RedisStandaloneEventHandlerDAO

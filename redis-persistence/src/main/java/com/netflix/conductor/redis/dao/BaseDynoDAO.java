@@ -16,28 +16,63 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.redis.config.JedisCommandsConfigurer;
+import com.netflix.conductor.redis.config.RedisCommonConfiguration;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
 import java.io.IOException;
-import org.apache.commons.lang3.StringUtils;
 
-public class BaseDynoDAO {
+import com.netflix.dyno.connectionpool.TokenMapSupplier;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+import javax.annotation.PostConstruct;
+
+@EnableConfigurationProperties(RedisProperties.class)
+public abstract class BaseDynoDAO {
 
     private static final String NAMESPACE_SEP = ".";
     private static final String DAO_NAME = "redis";
-    private final String domain;
-    private final RedisProperties properties;
-    private final ConductorProperties conductorProperties;
+
     protected JedisProxy jedisProxy;
+
+    @Autowired
+    protected RedisProperties properties;
+
+    @Autowired
+    protected ConductorProperties conductorProperties;
+
+    @Autowired
     protected ObjectMapper objectMapper;
 
-    protected BaseDynoDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
+    protected TokenMapSupplier tokenMapSupplier;
+
+    protected JedisCommandsConfigurer configurator;
+
+    private String domain = "";
+
+    public BaseDynoDAO() { }
+
+    public BaseDynoDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
+                          ConductorProperties conductorProperties, RedisProperties properties) {
         this.jedisProxy = jedisProxy;
         this.objectMapper = objectMapper;
         this.conductorProperties = conductorProperties;
         this.properties = properties;
+        init();
+    }
+
+    @PostConstruct
+    protected void init() {
+        this.tokenMapSupplier = RedisCommonConfiguration.tokenMapSupplier();
         this.domain = properties.getKeyspaceDomain();
+        this.jedisProxy = new JedisProxy(
+                configurator.jedisCommands(this.properties, 
+                        this.conductorProperties, 
+                        configurator.hostSupplier(properties), 
+                        this.tokenMapSupplier)
+        );
     }
 
     String nsKey(String... nsValues) {

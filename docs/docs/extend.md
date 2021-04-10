@@ -24,7 +24,48 @@ com.netflix.conductor.dao.QueueDAO
 ```
 
 It is possible to mix and match different implementations for each of these.  
-For example, SQS for queueing and a relational store for others.
+For example, SQS for queueing and a relational store for others. To do this, you must follow the Java SPI architecture.
+
+
+First, you should get familiar with "core DAO is the Service Interface" while "your DAO implementation is the Service 
+Provider". Create a project, which depends on core, and implement each Service Interface in a separate class. Then, 
+create folder main/resources/META-INF/services with text files, named as the fully qualified classes of the Service 
+Interfaces, and  edit each file inserting the fully qualified class name of your respective Service Provider.
+
+Example:
+```
+postgres-persistence
+|- src
+  |- main
+    |- resources
+      |- META-INF
+        |- services
+          |- com.netflix.conductor.dao.MetadataDAO
+```
+contains:
+```
+com.netflix.conductor.postgres.dao.PostgresMetadataDAO
+```
+
+When implementing your Service Provider, you must understand that Service Loader will  instantiate your Service Providers
+using the default constructor. Make sure your code won't try to create a Bean of your Service Providers, the Service 
+Loader will do it. Finally, use @Autowire for arguments required for initialize your Service Provide, and @PostConstruct 
+annotation to run any initialization step. For example:
+
+
+``` 
+@Autowired PostgresProperty properties;
+@Autowired Datasource datasource;
+
+public PostgresMetadataDAO() {}
+
+@PostConstruct
+protected void init() {
+  this.schema = this.properties.getSchema();
+}
+```
+
+
 
 
 ## System Tasks

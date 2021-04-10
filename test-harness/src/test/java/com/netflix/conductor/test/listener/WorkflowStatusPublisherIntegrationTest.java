@@ -45,6 +45,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
+    "spring.flyway.enabled=false",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
     "conductor.workflow-status-listener.type=queue_publisher",
     "conductor.workflow-status-listener.queue-publisher.successQueue=dummy",
     "conductor.workflow-status-listener.queue-publisher.failureQueue=dummy",
@@ -157,7 +159,7 @@ public class WorkflowStatusPublisherIntegrationTest {
 
         checkIfWorkflowIsCompleted(id);
 
-        List<Message> callbackMessages = queueDAO.pollMessages(CALLBACK_QUEUE, 1, 200);
+        List<Message> callbackMessages = queueDAO.pollMessages(CALLBACK_QUEUE, 1, 2000);
         queueDAO.ack(CALLBACK_QUEUE, callbackMessages.get(0).getId());
 
         WorkflowSummary payload = objectMapper.readValue(callbackMessages.get(0).getPayload(), WorkflowSummary.class);

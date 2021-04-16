@@ -37,6 +37,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+<<<<<<< HEAD
     implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
 
     runtimeOnly 'com.netflix.spectator:spectator-reg-micrometer'
@@ -49,6 +50,9 @@ dependencies {
     testImplementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
     testImplementation "io.grpc:grpc-protobuf:${revGrpc}"
     testImplementation "io.grpc:grpc-stub:${revGrpc}"
+=======
+    implementation group: 'com.netflix.spectator', name: 'spectator-reg-micrometer', version: '0.80.0'
+>>>>>>> feat:Add support for publishing in Prometheus registry using the spring-boot way
 }
 
 jar {

@@ -14,6 +14,10 @@ package com.netflix.conductor.contribs.metrics;
 
 import com.netflix.spectator.api.Meter;
 import com.netflix.spectator.api.Spectator;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,11 +25,6 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 @RunWith(SpringRunner.class)
 @Import({TestConfig.class, PrometheusMetricsConfiguration.class})

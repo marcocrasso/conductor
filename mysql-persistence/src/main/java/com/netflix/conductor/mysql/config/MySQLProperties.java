@@ -18,7 +18,6 @@ import org.springframework.boot.convert.DurationUnit;
 import java.sql.Connection;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
 @ConfigurationProperties("conductor.mysql")
 public class MySQLProperties {
@@ -46,7 +45,7 @@ public class MySQLProperties {
     /**
      * Used to override the default flyway migration table
      */
-    private String flywayTable = null;
+    private String flywayTable = "schema_version";
 
     // The defaults are currently in line with the HikariConfig defaults, which are unfortunately private.
     /**
@@ -126,8 +125,8 @@ public class MySQLProperties {
         this.flywayEnabled = flywayEnabled;
     }
 
-    public Optional<String> getFlywayTable() {
-        return Optional.ofNullable(flywayTable);
+    public String getFlywayTable() {
+        return flywayTable;
     }
 
     public void setFlywayTable(String flywayTable) {

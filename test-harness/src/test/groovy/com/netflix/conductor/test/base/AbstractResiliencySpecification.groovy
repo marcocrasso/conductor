@@ -33,8 +33,8 @@ import javax.annotation.PostConstruct
 @TestPropertySource(properties = [
         "conductor.system-task-workers.enabled=false",
         "conductor.workflow-repair-service.enabled=true",
-        "conductor.workflow-sweeper.enabled=true",
-        "conductor.integ-test.queueSpyEnabled=true"
+        "conductor.workflow-sweeper.enabled=false",
+        "conductor.integ-test.queue-spy.enabled=true"
 ])
 abstract class AbstractResiliencySpecification extends AbstractSpecification {
 
@@ -43,7 +43,7 @@ abstract class AbstractResiliencySpecification extends AbstractSpecification {
 
         @Primary
         @Bean
-        @ConditionalOnProperty(name = "conductor.integ-test.queueSpyEnabled", havingValue = "true")
+        @ConditionalOnProperty(name = "conductor.integ-test.queue-spy.enabled", havingValue = "true")
         QueueDAO SpyQueueDAO() {
             DetachedMockFactory detachedMockFactory = new DetachedMockFactory()
             DynoQueueDAO dynoQueueDAO = new SpyableQueue()

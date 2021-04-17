@@ -63,9 +63,9 @@ public class MySQLDataSourceProvider {
         hikariConfig.setAutoCommit(properties.isAutoCommit());
 
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-            .setDaemon(true)
-            .setNameFormat("hikari-mysql-%d")
-            .build();
+                .setDaemon(true)
+                .setNameFormat("hikari-mysql-%d")
+                .build();
 
         hikariConfig.setThreadFactory(threadFactory);
         return hikariConfig;
@@ -79,16 +79,15 @@ public class MySQLDataSourceProvider {
             return;
         }
 
+        String flywayTable = properties.getFlywayTable();
+        LOGGER.debug("Using Flyway migration table '{}'", flywayTable);
+
         FluentConfiguration fluentConfiguration = Flyway.configure()
-            .dataSource(dataSource)
-            .placeholderReplacement(false);
+                .table(flywayTable)
+                .dataSource(dataSource)
+                .placeholderReplacement(false);
 
-        properties.getFlywayTable().ifPresent(tableName -> {
-            LOGGER.debug("Using Flyway migration table '{}'", tableName);
-            fluentConfiguration.table(tableName);
-        });
-
-        Flyway flyway = new Flyway(fluentConfiguration);
+        Flyway flyway = fluentConfiguration.load();
         flyway.migrate();
     }
 }

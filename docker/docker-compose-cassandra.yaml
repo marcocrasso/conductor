@@ -8,7 +8,27 @@ services:
       internal:
         ipv4_address: 10.5.0.11
     ports:
+      - 9141:9042
+    environment:
+      - CASSANDRA_SEEDS=cassandra1
+
+  cassandra2:
+    image: cassandra:latest
+    networks:
+      internal:
+        ipv4_address: 10.5.0.12
+    ports:
       - 9142:9042
+    environment:
+      - CASSANDRA_SEEDS=cassandra1
+
+  cassandra3:
+    image: cassandra:latest
+    networks:
+      internal:
+        ipv4_address: 10.5.0.13
+    ports:
+      - 9143:9042
     environment:
       - CASSANDRA_SEEDS=cassandra1
 

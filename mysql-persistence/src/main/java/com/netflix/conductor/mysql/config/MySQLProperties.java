@@ -19,6 +19,7 @@ import java.sql.Connection;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+
 @ConfigurationProperties("conductor.mysql")
 public class MySQLProperties {
 

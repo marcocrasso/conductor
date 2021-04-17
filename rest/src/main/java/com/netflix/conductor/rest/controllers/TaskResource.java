@@ -152,4 +152,10 @@ public class TaskResource {
                                                               @RequestParam("operation") String operation, @RequestParam("payloadType") String payloadType) {
         return taskService.getExternalStorageLocation(path, operation, payloadType);
     }
+
+    @PostMapping("/{taskId}/ack")
+    @Operation(summary = "Ack Task Execution")
+    public String ack(@PathVariable("taskId") String taskId,  @RequestParam(value = "workerid", required = false) String workerId) {
+        return taskService.ackTaskReceived(taskId, workerId);
+    }
 }

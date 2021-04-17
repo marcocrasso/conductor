@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 
 @RestController
-@RequestMapping("/health")
+@RequestMapping(value = { "/health","/api/health" })
 public class HealthCheckResource {
 
 

@@ -1,4 +1,3 @@
-
 com.netflix.conductor.redis.cluster.RedisClusterEventHandlerDAO
 com.netflix.conductor.redis.dynomite.RedisDynomiteEventHandlerDAO
 com.netflix.conductor.redis.memory.RedisMemoryEventHandlerDAO

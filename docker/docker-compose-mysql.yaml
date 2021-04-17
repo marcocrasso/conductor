@@ -10,9 +10,7 @@ services:
       MYSQL_USER: conductor
       MYSQL_PASSWORD: password
     volumes:
-      - type: volume
-        source: conductor_mysql
-        target: /var/lib/mysql
+      - ./opt/mysql:/var/lib/mysql:rw
     networks:
       - internal
     ports:

@@ -40,16 +40,13 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(SpringRunner.class)
 public class MySQLExecutionDAOTest extends ExecutionDAOTest {
 
-    private MySQLDAOTestUtil testUtil;
-    private MySQLExecutionDAO executionDAO;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Rule
     public TestName name = new TestName();
-
     public MySQLContainer<?> mySQLContainer;
+    private MySQLDAOTestUtil testUtil;
+    private MySQLExecutionDAO executionDAO;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -77,7 +74,7 @@ public class MySQLExecutionDAOTest extends ExecutionDAOTest {
         generateWorkflows(workflow, 10);
 
         List<Workflow> bycorrelationId = getExecutionDAO()
-            .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
+                .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
         assertNotNull(bycorrelationId);
         assertEquals(10, bycorrelationId.size());
     }

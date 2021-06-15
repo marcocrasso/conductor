@@ -14,13 +14,12 @@ package com.netflix.conductor.redis.config;
 
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.dynoqueue.RedisQueuesShardingStrategyProvider;
-
-import com.netflix.dyno.connectionpool.RetryPolicy;
 import com.netflix.dyno.connectionpool.impl.RetryNTimes;
 import com.netflix.dyno.connectionpool.impl.RunOnce;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
+import com.netflix.dyno.connectionpool.RetryPolicy;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

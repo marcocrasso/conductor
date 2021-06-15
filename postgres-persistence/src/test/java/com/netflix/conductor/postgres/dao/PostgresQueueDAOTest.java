@@ -49,26 +49,20 @@ import static org.junit.Assert.*;
 public class PostgresQueueDAOTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQueueDAOTest.class);
-
-    private PostgresDAOTestUtil testUtil;
-
-    private PostgresQueueDAO queueDAO;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Rule
     public TestName name = new TestName();
-
     @Rule
     public ExpectedException expected = ExpectedException.none();
-
     public PostgreSQLContainer<?> postgreSQLContainer;
+    private PostgresDAOTestUtil testUtil;
+    private PostgresQueueDAO queueDAO;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
         postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
+                new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
 
         testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
@@ -276,7 +270,7 @@ public class PostgresQueueDAOTest {
         assertEquals("First poll size mismatch", firstPollSize, firstPoll.size());
 
         List<String> firstPollMessageIds = messages.stream().map(Message::getId).collect(Collectors.toList())
-            .subList(0, firstPollSize + 1);
+                .subList(0, firstPollSize + 1);
 
         for (int i = 0; i < firstPollSize; i++) {
             String actual = firstPoll.get(i).getId();

@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.mysql.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
 
+@ConditionalOnProperty(name = "spring.datasource.url")
 @DependsOn({"flyway", "flywayInitializer"})
 @Import(DataSourceAutoConfiguration.class)
 @Configuration(proxyBeanMethods = false)

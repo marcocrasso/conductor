@@ -45,19 +45,15 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 public class MySQLMetadataDAOTest {
 
-    private MySQLDAOTestUtil testUtil;
-    private MySQLMetadataDAO metadataDAO;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Rule
     public TestName name = new TestName();
-
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
     public MySQLContainer<?> mySQLContainer;
+    private MySQLDAOTestUtil testUtil;
+    private MySQLMetadataDAO metadataDAO;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -65,7 +61,7 @@ public class MySQLMetadataDAOTest {
         mySQLContainer.start();
         testUtil = new MySQLDAOTestUtil(mySQLContainer, objectMapper);
         metadataDAO = new MySQLMetadataDAO(testUtil.getObjectMapper(), testUtil.getDataSource(),
-            testUtil.getTestProperties());
+                testUtil.getTestProperties());
     }
 
     @After

@@ -40,22 +40,18 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(SpringRunner.class)
 public class PostgresExecutionDAOTest extends ExecutionDAOTest {
 
-    private PostgresDAOTestUtil testUtil;
-
-    private PostgresExecutionDAO executionDAO;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Rule
     public TestName name = new TestName();
-
     public PostgreSQLContainer<?> postgreSQLContainer;
+    private PostgresDAOTestUtil testUtil;
+    private PostgresExecutionDAO executionDAO;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
         postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
+                new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
 
         testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
@@ -80,7 +76,7 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         generateWorkflows(workflow, 10);
 
         List<Workflow> bycorrelationId = getExecutionDAO()
-            .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
+                .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
         assertNotNull(bycorrelationId);
         assertEquals(10, bycorrelationId.size());
     }

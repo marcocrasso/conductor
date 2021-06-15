@@ -47,20 +47,15 @@ import static org.junit.Assert.*;
 public class MySQLQueueDAOTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MySQLQueueDAOTest.class);
-
-    private MySQLDAOTestUtil testUtil;
-    private MySQLQueueDAO queueDAO;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Rule
     public TestName name = new TestName();
-
     @Rule
     public ExpectedException expected = ExpectedException.none();
-
     public MySQLContainer<?> mySQLContainer;
+    private MySQLDAOTestUtil testUtil;
+    private MySQLQueueDAO queueDAO;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -268,7 +263,7 @@ public class MySQLQueueDAOTest {
         assertEquals("First poll size mismatch", firstPollSize, firstPoll.size());
 
         List<String> firstPollMessageIds = messages.stream().map(Message::getId).collect(Collectors.toList())
-            .subList(0, firstPollSize + 1);
+                .subList(0, firstPollSize + 1);
 
         for (int i = 0; i < firstPollSize; i++) {
             String actual = firstPoll.get(i).getId();

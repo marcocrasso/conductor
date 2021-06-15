@@ -45,12 +45,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
-    "spring.flyway.enabled=false",
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration",
     "conductor.workflow-status-listener.type=queue_publisher",
     "conductor.workflow-status-listener.queue-publisher.successQueue=dummy",
     "conductor.workflow-status-listener.queue-publisher.failureQueue=dummy",
-    "conductor.workflow-status-listener.queue-publisher.finalizeQueue=final"
+    "conductor.workflow-status-listener.queue-publisher.finalizeQueue=final",
+    "spring.flyway.enabled=false"
 })
 @TestPropertySource(locations = "classpath:application-integrationtest.properties")
 public class WorkflowStatusPublisherIntegrationTest {

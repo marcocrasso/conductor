@@ -37,7 +37,8 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     private static final String ARCHIVED_FIELD = "archived";
     private static final String RAW_JSON_FIELD = "rawJSON";
 
-    public MySQLExecutionDAO() {}
+    public MySQLExecutionDAO() {
+    }
 
     public MySQLExecutionDAO(ObjectMapper objectMapper, DataSource dataSource, MySQLProperties properties) {
         super(objectMapper, dataSource, properties);
@@ -53,15 +54,19 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         return format.format(date);
     }
 
+    private static String taskKey(Task task) {
+        return task.getReferenceTaskName() + "_" + task.getRetryCount();
+    }
+
     @Override
     public List<Task> getPendingTasksByWorkflow(String taskDefName, String workflowId) {
         // @formatter:off
         String GET_IN_PROGRESS_TASKS_FOR_WORKFLOW = "SELECT json_data FROM task_in_progress tip "
-            + "INNER JOIN task t ON t.task_id = tip.task_id " + "WHERE task_def_name = ? AND workflow_id = ?";
+                + "INNER JOIN task t ON t.task_id = tip.task_id " + "WHERE task_def_name = ? AND workflow_id = ?";
         // @formatter:on
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_FOR_WORKFLOW,
-            q -> q.addParameter(taskDefName).addParameter(workflowId).executeAndFetch(Task.class));
+                q -> q.addParameter(taskDefName).addParameter(workflowId).executeAndFetch(Task.class));
     }
 
     @Override
@@ -90,10 +95,6 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         return tasks;
     }
 
-    private static String taskKey(Task task) {
-        return task.getReferenceTaskName() + "_" + task.getRetryCount();
-    }
-
     @Override
     public List<Task> createTasks(List<Task> tasks) {
         List<Task> created = Lists.newArrayListWithCapacity(tasks.size());
@@ -110,7 +111,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
 
                 if (!scheduledTaskAdded) {
                     logger.trace("Task already scheduled, skipping the run " + task.getTaskId() + ", ref="
-                        + task.getReferenceTaskName() + ", key=" + taskKey);
+                            + task.getReferenceTaskName() + ", key=" + taskKey);
                     continue;
                 }
 
@@ -154,7 +155,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         }
 
         logger.info("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit,
-            getInProgressTaskCount(task.getTaskDefName()));
+                getInProgressTaskCount(task.getTaskDefName()));
 
         String taskId = task.getTaskId();
 
@@ -164,7 +165,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
 
         if (rateLimited) {
             logger.info("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit,
-                getInProgressTaskCount(task.getTaskDefName()));
+                    getInProgressTaskCount(task.getTaskDefName()));
             Monitors.recordTaskConcurrentExecutionLimited(task.getTaskDefName(), limit);
         }
 
@@ -210,11 +211,11 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         Preconditions.checkNotNull(taskName, "task name cannot be null");
         // @formatter:off
         String GET_IN_PROGRESS_TASKS_FOR_TYPE = "SELECT json_data FROM task_in_progress tip "
-            + "INNER JOIN task t ON t.task_id = tip.task_id " + "WHERE task_def_name = ?";
+                + "INNER JOIN task t ON t.task_id = tip.task_id " + "WHERE task_def_name = ?";
         // @formatter:on
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_FOR_TYPE,
-            q -> q.addParameter(taskName).executeAndFetch(Task.class));
+                q -> q.addParameter(taskName).executeAndFetch(Task.class));
     }
 
     @Override
@@ -263,7 +264,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     @Override
     public boolean removeWorkflowWithExpiry(String workflowId, int ttlSeconds) {
         throw new UnsupportedOperationException(
-            "This method is not implemented in MySQLExecutionDAO. Please use RedisDAO mode instead for using TTLs.");
+                "This method is not implemented in MySQLExecutionDAO. Please use RedisDAO mode instead for using TTLs.");
     }
 
     @Override
@@ -302,7 +303,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String GET_PENDING_WORKFLOW_IDS = "SELECT workflow_id FROM workflow_pending WHERE workflow_type = ?";
 
         return queryWithTransaction(GET_PENDING_WORKFLOW_IDS,
-            q -> q.addParameter(workflowName).executeScalarList(String.class));
+                q -> q.addParameter(workflowName).executeScalarList(String.class));
     }
 
     /**
@@ -314,9 +315,9 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     public List<Workflow> getPendingWorkflowsByType(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         return getRunningWorkflowIds(workflowName, version).stream()
-            .map(this::getWorkflow)
-            .filter(workflow -> workflow.getWorkflowVersion() == version)
-            .collect(Collectors.toList());
+                .map(this::getWorkflow)
+                .filter(workflow -> workflow.getWorkflowVersion() == version)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -345,11 +346,11 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         withTransaction(tx -> {
             // @formatter:off
             String GET_ALL_WORKFLOWS_FOR_WORKFLOW_DEF = "SELECT workflow_id FROM workflow_def_to_workflow "
-                + "WHERE workflow_def = ? AND date_str BETWEEN ? AND ?";
+                    + "WHERE workflow_def = ? AND date_str BETWEEN ? AND ?";
             // @formatter:on
 
             List<String> workflowIds = query(tx, GET_ALL_WORKFLOWS_FOR_WORKFLOW_DEF, q -> q.addParameter(workflowName)
-                .addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
+                    .addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
             workflowIds.forEach(workflowId -> {
                 try {
                     Workflow wf = getWorkflow(workflowId);
@@ -371,7 +372,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String GET_WORKFLOWS_BY_CORRELATION_ID = "SELECT w.json_data FROM workflow w left join workflow_def_to_workflow wd on w.workflow_id = wd.workflow_id  WHERE w.correlation_id = ? and wd.workflow_def = ?";
 
         return queryWithTransaction(GET_WORKFLOWS_BY_CORRELATION_ID,
-            q -> q.addParameter(correlationId).addParameter(workflowName).executeAndFetch(Workflow.class));
+                q -> q.addParameter(correlationId).addParameter(workflowName).executeAndFetch(Workflow.class));
     }
 
     @Override
@@ -385,7 +386,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
             return getWithRetriedTransactions(tx -> insertEventExecution(tx, eventExecution));
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
-                "Unable to add event execution " + eventExecution.getId(), e);
+                    "Unable to add event execution " + eventExecution.getId(), e);
         }
     }
 
@@ -395,7 +396,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
             withTransaction(tx -> removeEventExecution(tx, eventExecution));
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
-                "Unable to remove event execution " + eventExecution.getId(), e);
+                    "Unable to remove event execution " + eventExecution.getId(), e);
         }
     }
 
@@ -405,12 +406,12 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
             withTransaction(tx -> updateEventExecution(tx, eventExecution));
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
-                "Unable to update event execution " + eventExecution.getId(), e);
+                    "Unable to update event execution " + eventExecution.getId(), e);
         }
     }
 
     public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId,
-        int max) {
+                                                   int max) {
         try {
             List<EventExecution> executions = Lists.newLinkedList();
             withTransaction(tx -> {
@@ -427,8 +428,8 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
             return executions;
         } catch (Exception e) {
             String message = String.format(
-                "Unable to get event executions for eventHandlerName=%s, eventName=%s, messageId=%s",
-                eventHandlerName, eventName, messageId);
+                    "Unable to get event executions for eventHandlerName=%s, eventName=%s, messageId=%s",
+                    eventHandlerName, eventName, messageId);
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message, e);
         }
     }
@@ -441,8 +442,8 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         // Generate a formatted query string with a variable number of bind params based
         // on taskIds.size()
         final String GET_TASKS_FOR_IDS = String.format(
-            "SELECT json_data FROM task WHERE task_id IN (%s) AND json_data IS NOT NULL",
-            Query.generateInBindings(taskIds.size()));
+                "SELECT json_data FROM task WHERE task_id IN (%s) AND json_data IS NOT NULL",
+                Query.generateInBindings(taskIds.size()));
 
         return query(connection, GET_TASKS_FOR_IDS, q -> q.addParameters(taskIds).executeAndFetch(Task.class));
     }
@@ -501,14 +502,14 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String INSERT_WORKFLOW = "INSERT INTO workflow (workflow_id, correlation_id, json_data) VALUES (?, ?, ?)";
 
         execute(connection, INSERT_WORKFLOW, q -> q.addParameter(workflow.getWorkflowId())
-            .addParameter(workflow.getCorrelationId()).addJsonParameter(workflow).executeUpdate());
+                .addParameter(workflow.getCorrelationId()).addJsonParameter(workflow).executeUpdate());
     }
 
     private void updateWorkflow(Connection connection, Workflow workflow) {
         String UPDATE_WORKFLOW = "UPDATE workflow SET json_data = ?, modified_on = CURRENT_TIMESTAMP WHERE workflow_id = ?";
 
         execute(connection, UPDATE_WORKFLOW,
-            q -> q.addJsonParameter(workflow).addParameter(workflow.getWorkflowId()).executeUpdate());
+                q -> q.addJsonParameter(workflow).addParameter(workflow.getWorkflowId()).executeUpdate());
     }
 
     private void removeWorkflow(Connection connection, String workflowId) {
@@ -521,13 +522,13 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String EXISTS_PENDING_WORKFLOW = "SELECT EXISTS(SELECT 1 FROM workflow_pending WHERE workflow_type = ? AND workflow_id = ?)";
 
         boolean exists = query(connection, EXISTS_PENDING_WORKFLOW,
-            q -> q.addParameter(workflowType).addParameter(workflowId).exists());
+                q -> q.addParameter(workflowType).addParameter(workflowId).exists());
 
         if (!exists) {
             String INSERT_PENDING_WORKFLOW = "INSERT IGNORE INTO workflow_pending (workflow_type, workflow_id) VALUES (?, ?)";
 
             execute(connection, INSERT_PENDING_WORKFLOW,
-                q -> q.addParameter(workflowType).addParameter(workflowId).executeUpdate());
+                    q -> q.addParameter(workflowType).addParameter(workflowId).executeUpdate());
         }
     }
 
@@ -535,7 +536,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String REMOVE_PENDING_WORKFLOW = "DELETE FROM workflow_pending WHERE workflow_type = ? AND workflow_id = ?";
 
         execute(connection, REMOVE_PENDING_WORKFLOW,
-            q -> q.addParameter(workflowType).addParameter(workflowId).executeDelete());
+                q -> q.addParameter(workflowType).addParameter(workflowId).executeDelete());
     }
 
     private void insertOrUpdateTaskData(Connection connection, Task task) {
@@ -545,12 +546,12 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
          */
         String UPDATE_TASK = "UPDATE task SET json_data=?, modified_on=CURRENT_TIMESTAMP WHERE task_id=?";
         int rowsUpdated = query(connection, UPDATE_TASK,
-            q -> q.addJsonParameter(task).addParameter(task.getTaskId()).executeUpdate());
+                q -> q.addJsonParameter(task).addParameter(task.getTaskId()).executeUpdate());
 
         if (rowsUpdated == 0) {
             String INSERT_TASK = "INSERT INTO task (task_id, json_data, modified_on) VALUES (?, ?, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE json_data=VALUES(json_data), modified_on=VALUES(modified_on)";
             execute(connection, INSERT_TASK,
-                q -> q.addParameter(task.getTaskId()).addJsonParameter(task).executeUpdate());
+                    q -> q.addParameter(task.getTaskId()).addJsonParameter(task).executeUpdate());
         }
     }
 
@@ -564,13 +565,13 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String EXISTS_WORKFLOW_TO_TASK = "SELECT EXISTS(SELECT 1 FROM workflow_to_task WHERE workflow_id = ? AND task_id = ?)";
 
         boolean exists = query(connection, EXISTS_WORKFLOW_TO_TASK,
-            q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).exists());
+                q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).exists());
 
         if (!exists) {
             String INSERT_WORKFLOW_TO_TASK = "INSERT IGNORE INTO workflow_to_task (workflow_id, task_id) VALUES (?, ?)";
 
             execute(connection, INSERT_WORKFLOW_TO_TASK,
-                q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeUpdate());
+                    q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeUpdate());
         }
     }
 
@@ -578,23 +579,23 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String REMOVE_WORKFLOW_TO_TASK = "DELETE FROM workflow_to_task WHERE workflow_id = ? AND task_id = ?";
 
         execute(connection, REMOVE_WORKFLOW_TO_TASK,
-            q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeDelete());
+                q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeDelete());
     }
 
     private void addWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
         String INSERT_WORKFLOW_DEF_TO_WORKFLOW = "INSERT INTO workflow_def_to_workflow (workflow_def, date_str, workflow_id) VALUES (?, ?, ?)";
 
         execute(connection, INSERT_WORKFLOW_DEF_TO_WORKFLOW,
-            q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
-                .addParameter(workflow.getWorkflowId()).executeUpdate());
+                q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
+                        .addParameter(workflow.getWorkflowId()).executeUpdate());
     }
 
     private void removeWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
         String REMOVE_WORKFLOW_DEF_TO_WORKFLOW = "DELETE FROM workflow_def_to_workflow WHERE workflow_def = ? AND date_str = ? AND workflow_id = ?";
 
         execute(connection, REMOVE_WORKFLOW_DEF_TO_WORKFLOW,
-            q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
-                .addParameter(workflow.getWorkflowId()).executeUpdate());
+                q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
+                        .addParameter(workflow.getWorkflowId()).executeUpdate());
     }
 
     @VisibleForTesting
@@ -603,14 +604,14 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         final String EXISTS_SCHEDULED_TASK = "SELECT EXISTS(SELECT 1 FROM task_scheduled where workflow_id = ? AND task_key = ?)";
 
         boolean exists = query(connection, EXISTS_SCHEDULED_TASK, q -> q.addParameter(task.getWorkflowInstanceId())
-            .addParameter(taskKey).exists());
+                .addParameter(taskKey).exists());
 
         if (!exists) {
             final String INSERT_IGNORE_SCHEDULED_TASK = "INSERT IGNORE INTO task_scheduled (workflow_id, task_key, task_id) VALUES (?, ?, ?)";
 
             int count = query(connection, INSERT_IGNORE_SCHEDULED_TASK,
-                q -> q.addParameter(task.getWorkflowInstanceId())
-                    .addParameter(taskKey).addParameter(task.getTaskId()).executeUpdate());
+                    q -> q.addParameter(task.getWorkflowInstanceId())
+                            .addParameter(taskKey).addParameter(task.getTaskId()).executeUpdate());
             return count > 0;
         } else {
             return false;
@@ -621,20 +622,20 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     private void removeScheduledTask(Connection connection, Task task, String taskKey) {
         String REMOVE_SCHEDULED_TASK = "DELETE FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
         execute(connection, REMOVE_SCHEDULED_TASK,
-            q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(taskKey).executeDelete());
+                q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(taskKey).executeDelete());
     }
 
     private void addTaskInProgress(Connection connection, Task task) {
         String EXISTS_IN_PROGRESS_TASK = "SELECT EXISTS(SELECT 1 FROM task_in_progress WHERE task_def_name = ? AND task_id = ?)";
 
         boolean exists = query(connection, EXISTS_IN_PROGRESS_TASK,
-            q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).exists());
+                q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).exists());
 
         if (!exists) {
             String INSERT_IN_PROGRESS_TASK = "INSERT INTO task_in_progress (task_def_name, task_id, workflow_id) VALUES (?, ?, ?)";
 
             execute(connection, INSERT_IN_PROGRESS_TASK, q -> q.addParameter(task.getTaskDefName())
-                .addParameter(task.getTaskId()).addParameter(task.getWorkflowInstanceId()).executeUpdate());
+                    .addParameter(task.getTaskId()).addParameter(task.getWorkflowInstanceId()).executeUpdate());
         }
     }
 
@@ -642,68 +643,68 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         String REMOVE_IN_PROGRESS_TASK = "DELETE FROM task_in_progress WHERE task_def_name = ? AND task_id = ?";
 
         execute(connection, REMOVE_IN_PROGRESS_TASK,
-            q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
+                q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
     }
 
     private void updateInProgressStatus(Connection connection, Task task, boolean inProgress) {
         String UPDATE_IN_PROGRESS_TASK_STATUS =
-            "UPDATE task_in_progress SET in_progress_status = ?, modified_on = CURRENT_TIMESTAMP "
-                + "WHERE task_def_name = ? AND task_id = ?";
+                "UPDATE task_in_progress SET in_progress_status = ?, modified_on = CURRENT_TIMESTAMP "
+                        + "WHERE task_def_name = ? AND task_id = ?";
 
         execute(connection, UPDATE_IN_PROGRESS_TASK_STATUS, q -> q.addParameter(inProgress)
-            .addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
+                .addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
     }
 
     private boolean insertEventExecution(Connection connection, EventExecution eventExecution) {
 
         String INSERT_EVENT_EXECUTION =
-            "INSERT INTO event_execution (event_handler_name, event_name, message_id, execution_id, json_data) "
-                + "VALUES (?, ?, ?, ?, ?)";
+                "INSERT INTO event_execution (event_handler_name, event_name, message_id, execution_id, json_data) "
+                        + "VALUES (?, ?, ?, ?, ?)";
         int count = query(connection, INSERT_EVENT_EXECUTION,
-            q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
-                .addParameter(eventExecution.getMessageId()).addParameter(eventExecution.getId())
-                .addJsonParameter(eventExecution).executeUpdate());
+                q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
+                        .addParameter(eventExecution.getMessageId()).addParameter(eventExecution.getId())
+                        .addJsonParameter(eventExecution).executeUpdate());
         return count > 0;
     }
 
     private void updateEventExecution(Connection connection, EventExecution eventExecution) {
         // @formatter:off
         String UPDATE_EVENT_EXECUTION = "UPDATE event_execution SET " + "json_data = ?, "
-            + "modified_on = CURRENT_TIMESTAMP " + "WHERE event_handler_name = ? " + "AND event_name = ? "
-            + "AND message_id = ? " + "AND execution_id = ?";
+                + "modified_on = CURRENT_TIMESTAMP " + "WHERE event_handler_name = ? " + "AND event_name = ? "
+                + "AND message_id = ? " + "AND execution_id = ?";
         // @formatter:on
 
         execute(connection, UPDATE_EVENT_EXECUTION,
-            q -> q.addJsonParameter(eventExecution).addParameter(eventExecution.getName())
-                .addParameter(eventExecution.getEvent()).addParameter(eventExecution.getMessageId())
-                .addParameter(eventExecution.getId()).executeUpdate());
+                q -> q.addJsonParameter(eventExecution).addParameter(eventExecution.getName())
+                        .addParameter(eventExecution.getEvent()).addParameter(eventExecution.getMessageId())
+                        .addParameter(eventExecution.getId()).executeUpdate());
     }
 
     private void removeEventExecution(Connection connection, EventExecution eventExecution) {
         String REMOVE_EVENT_EXECUTION = "DELETE FROM event_execution " + "WHERE event_handler_name = ? "
-            + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
+                + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
 
         execute(connection, REMOVE_EVENT_EXECUTION,
-            q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
-                .addParameter(eventExecution.getMessageId()).addParameter(eventExecution.getId())
-                .executeUpdate());
+                q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
+                        .addParameter(eventExecution.getMessageId()).addParameter(eventExecution.getId())
+                        .executeUpdate());
     }
 
     private EventExecution readEventExecution(Connection connection, String eventHandlerName, String eventName,
-        String messageId, String executionId) {
+                                              String messageId, String executionId) {
         // @formatter:off
         String GET_EVENT_EXECUTION = "SELECT json_data FROM event_execution " + "WHERE event_handler_name = ? "
-            + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
+                + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
         // @formatter:on
         return query(connection, GET_EVENT_EXECUTION, q -> q.addParameter(eventHandlerName).addParameter(eventName)
-            .addParameter(messageId).addParameter(executionId).executeAndFetchFirst(EventExecution.class));
+                .addParameter(messageId).addParameter(executionId).executeAndFetchFirst(EventExecution.class));
     }
 
     private List<String> findAllTasksInProgressInOrderOfArrival(Task task, int limit) {
         String GET_IN_PROGRESS_TASKS_WITH_LIMIT = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY created_on LIMIT ?";
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_WITH_LIMIT,
-            q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
+                q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
     }
 
     private void validate(Task task) {

@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 
 public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO {
 
-    private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();
     private static final String CLASS_NAME = PostgresMetadataDAO.class.getSimpleName();
+    private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();
 
     public PostgresMetadataDAO() {
         super();
@@ -105,7 +105,7 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
         withTransaction(tx -> {
             if (workflowExists(tx, def)) {
                 throw new ApplicationException(ApplicationException.Code.CONFLICT,
-                    "Workflow with " + def.key() + " already exists!");
+                        "Workflow with " + def.key() + " already exists!");
             }
 
             insertOrUpdateWorkflowDef(tx, def);
@@ -122,11 +122,11 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
     @Override
     public Optional<WorkflowDef> getLatestWorkflowDef(String name) {
         final String GET_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM meta_workflow_def WHERE NAME = ? AND " +
-            "version = latest_version";
+                "version = latest_version";
 
         return Optional.ofNullable(
-            queryWithTransaction(GET_LATEST_WORKFLOW_DEF_QUERY,
-                q -> q.addParameter(name).executeAndFetchFirst(WorkflowDef.class))
+                queryWithTransaction(GET_LATEST_WORKFLOW_DEF_QUERY,
+                        q -> q.addParameter(name).executeAndFetchFirst(WorkflowDef.class))
         );
     }
 
@@ -134,9 +134,9 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
     public Optional<WorkflowDef> getWorkflowDef(String name, int version) {
         final String GET_WORKFLOW_DEF_QUERY = "SELECT json_data FROM meta_workflow_def WHERE NAME = ? AND version = ?";
         return Optional.ofNullable(
-            queryWithTransaction(GET_WORKFLOW_DEF_QUERY, q -> q.addParameter(name)
-                .addParameter(version)
-                .executeAndFetchFirst(WorkflowDef.class))
+                queryWithTransaction(GET_WORKFLOW_DEF_QUERY, q -> q.addParameter(name)
+                        .addParameter(version)
+                        .executeAndFetchFirst(WorkflowDef.class))
         );
     }
 
@@ -149,7 +149,7 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
             execute(tx, DELETE_WORKFLOW_QUERY, q -> {
                 if (!q.addParameter(name).addParameter(version).executeDelete()) {
                     throw new ApplicationException(ApplicationException.Code.NOT_FOUND,
-                        String.format("No such workflow definition: %s version: %d", name, version));
+                            String.format("No such workflow definition: %s version: %d", name, version));
                 }
             });
             // reset latest version based on remaining rows for this workflow
@@ -173,17 +173,17 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
 
     public List<WorkflowDef> getAllLatest() {
         final String GET_ALL_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM meta_workflow_def WHERE version = " +
-            "latest_version";
+                "latest_version";
 
         return queryWithTransaction(GET_ALL_LATEST_WORKFLOW_DEF_QUERY, q -> q.executeAndFetch(WorkflowDef.class));
     }
 
     public List<WorkflowDef> getAllVersions(String name) {
         final String GET_ALL_VERSIONS_WORKFLOW_DEF_QUERY = "SELECT json_data FROM meta_workflow_def WHERE name = ? " +
-            "ORDER BY version";
+                "ORDER BY version";
 
         return queryWithTransaction(GET_ALL_VERSIONS_WORKFLOW_DEF_QUERY,
-            q -> q.addParameter(name).executeAndFetch(WorkflowDef.class));
+                q -> q.addParameter(name).executeAndFetch(WorkflowDef.class));
     }
 
     /**
@@ -217,10 +217,10 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
      */
     private Boolean workflowExists(Connection connection, WorkflowDef def) {
         final String CHECK_WORKFLOW_DEF_EXISTS_QUERY = "SELECT COUNT(*) FROM meta_workflow_def WHERE name = ? AND " +
-            "version = ?";
+                "version = ?";
 
         return query(connection, CHECK_WORKFLOW_DEF_EXISTS_QUERY,
-            q -> q.addParameter(def.getName()).addParameter(def.getVersion()).exists());
+                q -> q.addParameter(def.getName()).addParameter(def.getVersion()).exists());
     }
 
     /**
@@ -232,7 +232,7 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
      */
     private Optional<Integer> getLatestVersion(Connection tx, String name) {
         final String GET_LATEST_WORKFLOW_DEF_VERSION = "SELECT max(version) AS version FROM meta_workflow_def WHERE " +
-            "name = ?";
+                "name = ?";
 
         Integer val = query(tx, GET_LATEST_WORKFLOW_DEF_VERSION, q -> {
             q.addParameter(name);
@@ -258,34 +258,34 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
      */
     private void updateLatestVersion(Connection tx, String name, int version) {
         final String UPDATE_WORKFLOW_DEF_LATEST_VERSION_QUERY = "UPDATE meta_workflow_def SET latest_version = ? " +
-            "WHERE name = ?";
+                "WHERE name = ?";
 
         execute(tx, UPDATE_WORKFLOW_DEF_LATEST_VERSION_QUERY,
-            q -> q.addParameter(version).addParameter(name).executeUpdate());
+                q -> q.addParameter(version).addParameter(name).executeUpdate());
     }
 
     private void insertOrUpdateWorkflowDef(Connection tx, WorkflowDef def) {
         final String INSERT_WORKFLOW_DEF_QUERY = "INSERT INTO meta_workflow_def (name, version, json_data) VALUES (?," +
-            " ?, ?)";
+                " ?, ?)";
 
         Optional<Integer> version = getLatestVersion(tx, def.getName());
         if (!workflowExists(tx, def)) {
             execute(tx, INSERT_WORKFLOW_DEF_QUERY, q -> q.addParameter(def.getName())
-                .addParameter(def.getVersion())
-                .addJsonParameter(def)
-                .executeUpdate());
+                    .addParameter(def.getVersion())
+                    .addJsonParameter(def)
+                    .executeUpdate());
         } else {
             //@formatter:off
             final String UPDATE_WORKFLOW_DEF_QUERY =
-                "UPDATE meta_workflow_def " +
-                    "SET json_data = ?, modified_on = CURRENT_TIMESTAMP " +
-                    "WHERE name = ? AND version = ?";
+                    "UPDATE meta_workflow_def " +
+                            "SET json_data = ?, modified_on = CURRENT_TIMESTAMP " +
+                            "WHERE name = ? AND version = ?";
             //@formatter:on
 
             execute(tx, UPDATE_WORKFLOW_DEF_QUERY, q -> q.addJsonParameter(def)
-                .addParameter(def.getName())
-                .addParameter(def.getVersion())
-                .executeUpdate());
+                    .addParameter(def.getName())
+                    .addParameter(def.getVersion())
+                    .executeUpdate());
         }
         int maxVersion = def.getVersion();
         if (version.isPresent() && version.get() > def.getVersion()) {
@@ -341,7 +341,7 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
         final String READ_ONE_TASKDEF_QUERY = "SELECT json_data FROM meta_task_def WHERE name = ?";
 
         return queryWithTransaction(READ_ONE_TASKDEF_QUERY,
-            q -> q.addParameter(name).executeAndFetchFirst(TaskDef.class));
+                q -> q.addParameter(name).executeAndFetchFirst(TaskDef.class));
     }
 
     private String insertOrUpdateTaskDef(TaskDef taskDef) {
@@ -354,7 +354,7 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO 
                 int result = update.addJsonParameter(taskDef).addParameter(taskDef.getName()).executeUpdate();
                 if (result == 0) {
                     execute(tx, INSERT_TASKDEF_QUERY,
-                        insert -> insert.addParameter(taskDef.getName()).addJsonParameter(taskDef).executeUpdate());
+                            insert -> insert.addParameter(taskDef.getName()).addJsonParameter(taskDef).executeUpdate());
                 }
             });
 

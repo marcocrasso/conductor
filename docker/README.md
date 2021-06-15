@@ -27,7 +27,6 @@ In addition to Dynomite, it is possible to use MySQL, Postgres, or Cassandra, an
 
 ### MySQL example
 
-<<<<<<< HEAD
 This requires to run a MySQL instance and configure Conductor server. Please check server/config/config-mysql.properties.
 
 ```
@@ -91,13 +90,6 @@ docker-compose build conductor-ui
 ```
 docker-compose up -d conductor-ui
 ```
-=======
-## Running in Interactive Mode
-In interactive mode the default startup script for the container do not run
- - `docker run -p 8080:8080 -t -i conductor:server -`
- - `docker run -p 5000:5000 -t -i conductor:ui -`
-
->>>>>>> feat:Add support for publishing in Prometheus registry using the spring-boot way
 
 ## Monitoring with Prometheus
 

@@ -42,7 +42,6 @@ import static java.lang.Integer.parseInt;
 import static java.lang.System.getProperty;
 
 
-
 @EnableConfigurationProperties(MySQLProperties.class)
 public abstract class MySQLBaseDAO {
 
@@ -50,20 +49,17 @@ public abstract class MySQLBaseDAO {
     private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE = "3";
     private static final int MAX_RETRY_ON_DEADLOCK = getMaxRetriesOnDeadLock();
     private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
-        MySQLBaseDAO.class.getName(),
-        Thread.class.getName()
+            MySQLBaseDAO.class.getName(),
+            Thread.class.getName()
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    @Autowired
-    MySQLProperties properties;
-
     @Autowired
     protected ObjectMapper objectMapper;
-
     @Autowired
     protected DataSource dataSource;
+    @Autowired
+    MySQLProperties properties;
 
     public MySQLBaseDAO() {
 
@@ -76,6 +72,15 @@ public abstract class MySQLBaseDAO {
         init();
     }
 
+    private static int getMaxRetriesOnDeadLock() {
+        try {
+            return parseInt(
+                    getProperty(MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME, MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE));
+        } catch (Exception e) {
+            return parseInt(MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE);
+        }
+    }
+
     @PostConstruct
     protected void init() {
 
@@ -83,10 +88,10 @@ public abstract class MySQLBaseDAO {
 
     protected final LazyToString getCallingMethod() {
         return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
-            .filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
-            .findFirst()
-            .map(StackTraceElement::getMethodName)
-            .orElseThrow(() -> new NullPointerException("Cannot find Caller")));
+                .filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
+                .findFirst()
+                .map(StackTraceElement::getMethodName)
+                .orElseThrow(() -> new NullPointerException("Cannot find Caller")));
     }
 
     protected String toJson(Object value) {
@@ -161,12 +166,12 @@ public abstract class MySQLBaseDAO {
     <R> R getWithRetriedTransactions(final TransactionalFunction<R> function) {
         try {
             return new RetryUtil<R>().retryOnException(
-                () -> getWithTransaction(function),
-                this::isDeadLockError,
-                null,
-                MAX_RETRY_ON_DEADLOCK,
-                "retry on deadlock",
-                "transactional"
+                    () -> getWithTransaction(function),
+                    this::isDeadLockError,
+                    null,
+                    MAX_RETRY_ON_DEADLOCK,
+                    "retry on deadlock",
+                    "transactional"
             );
         } catch (RuntimeException e) {
             throw (ApplicationException) e.getCause();
@@ -198,7 +203,6 @@ public abstract class MySQLBaseDAO {
             logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
         }
     }
-
 
     /**
      * Wraps {@link #getWithRetriedTransactions(TransactionalFunction)} with no return value.
@@ -286,14 +290,5 @@ public abstract class MySQLBaseDAO {
             causeException = causeException.getCause();
         }
         return (SQLException) causeException;
-    }
-
-    private static int getMaxRetriesOnDeadLock() {
-        try {
-            return parseInt(
-                getProperty(MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME, MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE));
-        } catch (Exception e) {
-            return parseInt(MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE);
-        }
     }
 }

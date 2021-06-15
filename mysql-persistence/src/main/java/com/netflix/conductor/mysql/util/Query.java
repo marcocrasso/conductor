@@ -36,13 +36,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author mustafa
  */
 public class Query implements AutoCloseable {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     /**
      * The {@link ObjectMapper} instance to use for serializing/deserializing JSON.
      */
     protected final ObjectMapper objectMapper;
-
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     /**
      * The initial supplied query String that was used to prepare {@link #statement}.
      */
@@ -67,7 +65,7 @@ public class Query implements AutoCloseable {
             this.statement = connection.prepareStatement(query);
         } catch (SQLException ex) {
             throw new ApplicationException(Code.BACKEND_ERROR,
-                "Cannot prepare statement for query: " + ex.getMessage(), ex);
+                    "Cannot prepare statement for query: " + ex.getMessage(), ex);
         }
     }
 
@@ -126,6 +124,7 @@ public class Query implements AutoCloseable {
 
     /**
      * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link Date}.
+     *
      * @param date The {@literal java.util.Date} to bind.
      * @return {@literal this}
      */
@@ -135,6 +134,7 @@ public class Query implements AutoCloseable {
 
     /**
      * Bind the given {@link java.util.Date} to the PreparedStatement as a {@link Timestamp}.
+     *
      * @param date The {@literal java.util.Date} to bind.
      * @return {@literal this}
      */
@@ -144,6 +144,7 @@ public class Query implements AutoCloseable {
 
     /**
      * Bind the given epoch millis to the PreparedStatement as a {@link Timestamp}.
+     *
      * @param epochMillis The epoch ms to create a new {@literal Timestamp} from.
      * @return {@literal this}
      */
@@ -156,7 +157,6 @@ public class Query implements AutoCloseable {
      *
      * @param values The values to bind to the prepared statement.
      * @return {@literal this}
-     *
      * @throws IllegalArgumentException If a non-primitive/unsupported type is encountered in the collection.
      * @see #addParameters(Object...)
      */
@@ -169,7 +169,6 @@ public class Query implements AutoCloseable {
      *
      * @param values The values to bind to the prepared statement.
      * @return {@literal this}
-     *
      * @throws IllegalArgumentException If a non-primitive/unsupported type is encountered.
      */
     public Query addParameters(Object... values) {
@@ -180,7 +179,7 @@ public class Query implements AutoCloseable {
                 addParameter((Integer) v);
             } else if (v instanceof Long) {
                 addParameter((Long) v);
-            } else if(v instanceof Double) {
+            } else if (v instanceof Double) {
                 addParameter((Double) v);
             } else if (v instanceof Boolean) {
                 addParameter((Boolean) v);
@@ -190,7 +189,7 @@ public class Query implements AutoCloseable {
                 addParameter((Timestamp) v);
             } else {
                 throw new IllegalArgumentException(
-                    "Type " + v.getClass().getName() + " is not supported by automatic property assignment");
+                        "Type " + v.getClass().getName() + " is not supported by automatic property assignment");
             }
         }
 
@@ -204,7 +203,6 @@ public class Query implements AutoCloseable {
      * The {@link #rawQuery} provided must result in a {@link Number} or {@link Boolean} result.
      *
      * @return {@literal true} If a count query returned more than 0 or an exists query returns {@literal true}.
-     *
      * @throws ApplicationException If an unexpected return type cannot be evaluated to a {@code Boolean} result.
      */
     public boolean exists() {
@@ -226,15 +224,14 @@ public class Query implements AutoCloseable {
         }
 
         throw new ApplicationException(Code.BACKEND_ERROR,
-            "Expected a Numeric or Boolean scalar return value from the query, received " +
-                val.getClass().getName());
+                "Expected a Numeric or Boolean scalar return value from the query, received " +
+                        val.getClass().getName());
     }
 
     /**
      * Convenience method for executing delete statements.
      *
      * @return {@literal true} if the statement affected 1 or more rows.
-     *
      * @see #executeUpdate()
      */
     public boolean executeDelete() {
@@ -287,10 +284,9 @@ public class Query implements AutoCloseable {
      * <em>NOTE:</em> The returned ResultSet must be closed/managed by the calling methods.
      *
      * @return {@link PreparedStatement#executeQuery()}
-     *
      * @throws ApplicationException If any SQL errors occur.
      */
-    public ResultSet executeQuery(){
+    public ResultSet executeQuery() {
         Long start = null;
         if (logger.isTraceEnabled()) {
             start = System.currentTimeMillis();
@@ -326,11 +322,10 @@ public class Query implements AutoCloseable {
      * Execute the PreparedStatement and return a single 'primitive' value from the ResultSet.
      *
      * @param returnType The type to return.
-     * @param <V> The type parameter to return a List of.
+     * @param <V>        The type parameter to return a List of.
      * @return A single result from the execution of the statement, as a type of {@literal returnType}.
-     *
      * @throws ApplicationException {@literal returnType} is unsupported, cannot be cast to from the result, or any SQL
-     * errors occur.
+     *                              errors occur.
      */
     public <V> V executeScalar(Class<V> returnType) {
         try (ResultSet rs = executeQuery()) {
@@ -356,11 +351,10 @@ public class Query implements AutoCloseable {
      * Execute the PreparedStatement and return a List of 'primitive' values from the ResultSet.
      *
      * @param returnType The type Class return a List of.
-     * @param <V> The type parameter to return a List of.
+     * @param <V>        The type parameter to return a List of.
      * @return A {@code List<returnType>}.
-     *
      * @throws ApplicationException {@literal returnType} is unsupported, cannot be cast to from the result, or any SQL
-     * errors occur.
+     *                              errors occur.
      */
     public <V> List<V> executeScalarList(Class<V> returnType) {
         try (ResultSet rs = executeQuery()) {
@@ -378,7 +372,7 @@ public class Query implements AutoCloseable {
      * Execute the statement and return only the first record from the result set.
      *
      * @param returnType The Class to return.
-     * @param <V> The type parameter.
+     * @param <V>        The type parameter.
      * @return An instance of {@literal <V>} from the result set.
      */
     public <V> V executeAndFetchFirst(Class<V> returnType) {
@@ -393,11 +387,10 @@ public class Query implements AutoCloseable {
      * Execute the PreparedStatement and return a List of {@literal returnType} values from the ResultSet.
      *
      * @param returnType The type Class return a List of.
-     * @param <V> The type parameter to return a List of.
+     * @param <V>        The type parameter to return a List of.
      * @return A {@code List<returnType>}.
-     *
      * @throws ApplicationException {@literal returnType} is unsupported, cannot be cast to from the result, or any SQL
-     * errors occur.
+     *                              errors occur.
      */
     public <V> List<V> executeAndFetch(Class<V> returnType) {
         try (ResultSet rs = executeQuery()) {
@@ -415,7 +408,7 @@ public class Query implements AutoCloseable {
      * Execute the query and pass the {@link ResultSet} to the given handler.
      *
      * @param handler The {@link ResultSetHandler} to execute.
-     * @param <V> The return type of this method.
+     * @param <V>     The return type of this method.
      * @return The results of {@link ResultSetHandler#apply(ResultSet)}.
      */
     public <V> V executeAndFetch(ResultSetHandler<V> handler) {
@@ -569,7 +562,7 @@ public class Query implements AutoCloseable {
 
         String text = value.toString().trim();
         return "Y".equalsIgnoreCase(text) || "YES".equalsIgnoreCase(text) || "TRUE".equalsIgnoreCase(text) ||
-            "T".equalsIgnoreCase(text) || "1".equalsIgnoreCase(text);
+                "T".equalsIgnoreCase(text) || "1".equalsIgnoreCase(text);
     }
 
 
@@ -594,7 +587,7 @@ public class Query implements AutoCloseable {
             return objectMapper.readValue(value, returnType);
         } catch (IOException ex) {
             throw new ApplicationException(Code.BACKEND_ERROR,
-                "Could not convert JSON '" + value + "' to " + returnType.getName(), ex);
+                    "Could not convert JSON '" + value + "' to " + returnType.getName(), ex);
         }
     }
 

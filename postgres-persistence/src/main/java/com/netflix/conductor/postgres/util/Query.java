@@ -37,13 +37,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Query implements AutoCloseable {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-
     /**
      * The {@link ObjectMapper} instance to use for serializing/deserializing JSON.
      */
     protected final ObjectMapper objectMapper;
-
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     /**
      * The initial supplied query String that was used to prepare {@link #statement}.
      */
@@ -68,7 +66,7 @@ public class Query implements AutoCloseable {
             this.statement = connection.prepareStatement(query);
         } catch (SQLException ex) {
             throw new ApplicationException(Code.BACKEND_ERROR,
-                "Cannot prepare statement for query: " + ex.getMessage(), ex);
+                    "Cannot prepare statement for query: " + ex.getMessage(), ex);
         }
     }
 
@@ -192,7 +190,7 @@ public class Query implements AutoCloseable {
                 addParameter((Timestamp) v);
             } else {
                 throw new IllegalArgumentException(
-                    "Type " + v.getClass().getName() + " is not supported by automatic property assignment");
+                        "Type " + v.getClass().getName() + " is not supported by automatic property assignment");
             }
         }
 
@@ -227,8 +225,8 @@ public class Query implements AutoCloseable {
         }
 
         throw new ApplicationException(Code.BACKEND_ERROR,
-            "Expected a Numeric or Boolean scalar return value from the query, received " +
-                val.getClass().getName());
+                "Expected a Numeric or Boolean scalar return value from the query, received " +
+                        val.getClass().getName());
     }
 
     /**
@@ -565,7 +563,7 @@ public class Query implements AutoCloseable {
 
         String text = value.toString().trim();
         return "Y".equalsIgnoreCase(text) || "YES".equalsIgnoreCase(text) || "TRUE".equalsIgnoreCase(text) ||
-            "T".equalsIgnoreCase(text) || "1".equalsIgnoreCase(text);
+                "T".equalsIgnoreCase(text) || "1".equalsIgnoreCase(text);
     }
 
 
@@ -590,7 +588,7 @@ public class Query implements AutoCloseable {
             return objectMapper.readValue(value, returnType);
         } catch (IOException ex) {
             throw new ApplicationException(Code.BACKEND_ERROR,
-                "Could not convert JSON '" + value + "' to " + returnType.getName(), ex);
+                    "Could not convert JSON '" + value + "' to " + returnType.getName(), ex);
         }
     }
 

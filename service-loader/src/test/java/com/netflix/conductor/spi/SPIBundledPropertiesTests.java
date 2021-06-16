@@ -26,8 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootConfiguration
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
-        "conductor.db.type=redis",
-        "conductor.redis.type=memory"
+        "conductor.db.type=dynomite"
 })
 @EnableConfigurationProperties(SPIBundledProperties.class)
 @TestPropertySource(locations = "classpath:test.spi.bundled.properties")
@@ -40,11 +39,11 @@ public class SPIBundledPropertiesTests {
      */
     @Test
     public void testPropertiesBeenSet() {
-        Assert.assertEquals(System.getProperty(QueueDAO.class.getName()), "com.netflix.conductor.redis.dao.DynoQueueDAO");
-        Assert.assertEquals(System.getProperty(MetadataDAO.class.getName()), "com.netflix.conductor.redis.dao.RedisMetadataDAO");
-        Assert.assertEquals(System.getProperty(ExecutionDAO.class.getName()), "com.netflix.conductor.redis.dao.RedisExecutionDAO");
-        Assert.assertEquals(System.getProperty(EventHandlerDAO.class.getName()), "com.netflix.conductor.redis.dao.RedisEventHandlerDAO");
-        Assert.assertEquals(System.getProperty(PollDataDAO.class.getName()),"com.netflix.conductor.redis.dao.RedisPollDataDAO");
-        Assert.assertEquals(System.getProperty(RateLimitingDAO.class.getName()),"com.netflix.conductor.redis.dao.RedisRateLimitingDAO");
+        Assert.assertEquals(System.getProperty(QueueDAO.class.getName()), "com.netflix.conductor.redis.dynomite.RedisDynomiteQueueDAO");
+        Assert.assertEquals(System.getProperty(MetadataDAO.class.getName()), "com.netflix.conductor.redis.dynomite.RedisDynomiteMetadataDAO");
+        Assert.assertEquals(System.getProperty(ExecutionDAO.class.getName()), "com.netflix.conductor.redis.dynomite.RedisDynomiteExecutionDAO");
+        Assert.assertEquals(System.getProperty(EventHandlerDAO.class.getName()), "com.netflix.conductor.redis.dynomite.RedisDynomiteEventHandlerDAO");
+        Assert.assertEquals(System.getProperty(PollDataDAO.class.getName()),"com.netflix.conductor.redis.dynomite.RedisDynomitePollDataDAO");
+        Assert.assertEquals(System.getProperty(RateLimitingDAO.class.getName()),"com.netflix.conductor.redis.dynomite.RedisDynomiteRateLimitingDAO");
     }
 }

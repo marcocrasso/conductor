@@ -5,6 +5,8 @@ services:
     environment:
       - CONFIG_PROP=${CONDUCTOR_CONFIG_FILE:-config.properties}
     image: conductor:server
+    volumes:
+      - ./server/config:/app/config
     build:
       context: ../
       dockerfile: docker/server/Dockerfile

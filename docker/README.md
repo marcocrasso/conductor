@@ -58,8 +58,8 @@ docker-compose up -d conductor-server
 This requires to run a Postgres instance and configure Conductor server. Please check server/config/config-postgres.properties.
 
 ```
-docker-compose -f docker-compose-mysql.yaml up -d mysql
-export CONDUCTOR_CONFIG_FILE=config-mysql.properties
+docker-compose -f docker-compose-postgres.yaml up -d postgres
+export CONDUCTOR_CONFIG_FILE=config-postgres.properties
 docker-compose up -d conductor-server
 ```
 

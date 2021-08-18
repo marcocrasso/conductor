@@ -46,8 +46,6 @@ include 'es7-persistence'
 include 'redis-lock'
 include 'zookeeper-lock'
 
-include 'azureblob-storage'
-
 include 'rest'
 include 'grpc'
 include 'grpc-server'

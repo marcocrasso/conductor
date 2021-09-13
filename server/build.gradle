@@ -17,7 +17,7 @@ plugins {
 }
 
 dependencies {
-
+    implementation project(':conductor-redis-lock')
     implementation project(':conductor-rest')
     implementation project(':conductor-core')
     implementation project(':conductor-contribs')

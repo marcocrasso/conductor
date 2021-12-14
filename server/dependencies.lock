@@ -385,22 +385,13 @@
             "locked": "2.13.3"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:transport": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
@@ -790,22 +781,13 @@
             "locked": "2.13.3"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:transport": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
@@ -1281,19 +1263,16 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.elasticsearch.client:transport": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-es6-persistence"
-            ],
-            "locked": "6.8.12"
+            "locked": "7.6.2"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
